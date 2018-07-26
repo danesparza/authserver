@@ -10,8 +10,12 @@ import (
 var yamlDefault = []byte(`# Config created %s
 uiservice:
   port: 3000
+  tlscert: cert.pem
+  tlskey: key.pem
 apiservice:
   port: 3001
+  tlscert: cert.pem
+  tlskey: key.pem
 datastore:
   type: boltdb
   database: config.db
