@@ -52,18 +52,24 @@ func start(cmd *cobra.Command, args []string) {
 		formattedUIInterface = "127.0.0.1"
 	}
 
+	//	Log our TLS key information
+	log.Printf("[INFO] API TLS cert: %s\n", viper.GetString("apiservice.tlscert"))
+	log.Printf("[INFO] API TLS key: %s\n", viper.GetString("apiservice.tlskey"))
+	log.Printf("[INFO] UI TLS cert: %s\n", viper.GetString("uiservice.tlscert"))
+	log.Printf("[INFO] UI TLS key: %s\n", viper.GetString("uiservice.tlskey"))
+
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		log.Printf("[INFO] Starting API service: http://%s:%s\n", formattedAPIInterface, viper.GetString("apiservice.port"))
-		log.Printf("[ERROR] %v\n", http.ListenAndServe(viper.GetString("apiservice.bind")+":"+viper.GetString("apiservice.port"), corsHandler))
+		log.Printf("[INFO] Starting API service: https://%s:%s\n", formattedAPIInterface, viper.GetString("apiservice.port"))
+		log.Printf("[ERROR] %v\n", http.ListenAndServeTLS(viper.GetString("apiservice.bind")+":"+viper.GetString("apiservice.port"), viper.GetString("apiservice.tlscert"), viper.GetString("apiservice.tlskey"), corsHandler))
 	}()
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		log.Printf("[INFO] Starting UI service: http://%s:%s\n", formattedUIInterface, viper.GetString("uiservice.port"))
-		log.Printf("[ERROR] %v\n", http.ListenAndServe(viper.GetString("uiservice.bind")+":"+viper.GetString("uiservice.port"), UIRouter))
+		log.Printf("[INFO] Starting UI service: https://%s:%s\n", formattedUIInterface, viper.GetString("uiservice.port"))
+		log.Printf("[ERROR] %v\n", http.ListenAndServeTLS(viper.GetString("uiservice.bind")+":"+viper.GetString("uiservice.port"), viper.GetString("uiservice.tlscert"), viper.GetString("uiservice.tlskey"), UIRouter))
 	}()
 
 	//	Wait for everything to stop...
