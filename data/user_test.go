@@ -22,7 +22,7 @@ func TestUser_Database_ShouldNotExistYet(t *testing.T) {
 func TestUser_Set_Successful(t *testing.T) {
 	//	Arrange
 	filename := "testsystem.db"
-	defer os.Remove(filename)
+	// defer os.Remove(filename)
 
 	db := data.SystemDB{
 		Database: filename}
@@ -63,7 +63,7 @@ func TestUser_Set_Successful(t *testing.T) {
 func TestUser_GetAllUsers_NoItems_NoErrors(t *testing.T) {
 	//	Arrange
 	filename := "testsystem.db"
-	defer os.Remove(filename)
+	// defer os.Remove(filename)
 
 	db := data.SystemDB{
 		Database: filename}
@@ -92,18 +92,18 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 		Database: filename}
 
 	//	Our 'context' user (the one performing the action)
-	uctx := data.User{
-		Name: "Admin",
-	}
-
-	//	Try storing some users:
-	u1 := data.User{
-		Name:        "TestUser1",
-		Secret:      "SomeRandomSecret1",
-		Description: "Unit test user 1",
-	}
-
 	/*
+		uctx := data.User{
+			Name: "Admin",
+		}
+
+		//	Try storing some users:
+		u1 := data.User{
+			Name:        "TestUser1",
+			Secret:      "SomeRandomSecret1",
+			Description: "Unit test user 1",
+		}
+
 		u2 := data.User{
 			Name:        "TestUser2",
 			Secret:      "SomeRandomSecret2",
@@ -117,7 +117,7 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 		}
 	*/
 
-	db.SetUser(uctx, u1)
+	// db.SetUser(uctx, u1)
 	// db.SetUser(uctx, u2)
 	// db.SetUser(uctx, u3)
 
