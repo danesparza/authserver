@@ -16,3 +16,6 @@ authserver.yml
 
 # Ignore certs:
 *.pem
+
+# Ignore system/token database files:
+*.db
