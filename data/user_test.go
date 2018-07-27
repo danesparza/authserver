@@ -94,7 +94,7 @@ func TestUser_GetAllUsers_NoItems_NoErrors(t *testing.T) {
 func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 	//	Arrange
 	filename := getTestFile()
-	defer os.Remove(filename)
+	// defer os.Remove(filename)
 
 	db := data.SystemDB{
 		Database: filename}
