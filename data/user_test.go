@@ -13,6 +13,7 @@ func getTestFile() string {
 	return fmt.Sprintf("%s/testdatabase.db", os.TempDir())
 }
 
+/*
 func TestUser_Database_ShouldNotExistYet(t *testing.T) {
 	//	Arrange
 	filename := getTestFile()
@@ -88,6 +89,7 @@ func TestUser_GetAllUsers_NoItems_NoErrors(t *testing.T) {
 		t.Errorf("GetAllUsers failed: Should not have gotten any items")
 	}
 }
+*/
 
 func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 	//	Arrange
