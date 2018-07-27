@@ -48,10 +48,10 @@ func (store SystemDB) SetUser(context, user User) (User, error) {
 
 	//	Open the database
 	db, err := bolt.Open(store.Database, 600, nil)
-	defer db.Close()
 	if err != nil {
 		return retval, err
 	}
+	defer db.Close()
 
 	//	Update the database:
 	err = db.Update(func(tx *bolt.Tx) error {
@@ -101,10 +101,10 @@ func (store SystemDB) GetAllUsers() ([]User, error) {
 
 	//	Open the database:
 	db, err := bolt.Open(store.Database, 0600, nil)
-	defer db.Close()
 	if err != nil {
 		return retval, err
 	}
+	defer db.Close()
 
 	//	Get all the items:
 	err = db.View(func(tx *bolt.Tx) error {
