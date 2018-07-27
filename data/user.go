@@ -1,8 +1,8 @@
 package data
 
 import (
-	"encoding/binary"
 	"encoding/json"
+	"strconv"
 	"time"
 
 	bolt "github.com/coreos/bbolt"
@@ -13,7 +13,7 @@ import (
 // They can be created/updated/deleted.  If they are deleted, eventually
 // they will be removed from the system
 type User struct {
-	ID          int       `json:"id"`
+	ID          int64     `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	Secret      string    `json:"secret"`
@@ -29,9 +29,9 @@ type User struct {
 // a resource/application/service, and the roles that user has
 // been assigned within the application/resource/service
 type UserResourceRoles struct {
-	UserID     int       `json:"userid"`
-	ResourceID int       `json:"resourceid"`
-	RoleID     int       `json:"roleid"`
+	UserID     int64     `json:"userid"`
+	ResourceID int64     `json:"resourceid"`
+	RoleID     int64     `json:"roleid"`
 	Created    time.Time `json:"created"`
 	CreatedBy  string    `json:"created_by"`
 	Updated    time.Time `json:"updated"`
@@ -62,8 +62,11 @@ func (store SystemDB) SetUser(context, user User) (User, error) {
 
 		// Generate ID for the user if needed.
 		if user.ID == 0 {
-			id, _ := b.NextSequence()
-			user.ID = int(id)
+			id, err := b.NextSequence()
+			if err != nil {
+				return err
+			}
+			user.ID = int64(id)
 		}
 
 		//	Set the current datetime(s) and created/updated by information:
@@ -82,7 +85,8 @@ func (store SystemDB) SetUser(context, user User) (User, error) {
 		}
 
 		//	Store it, with the 'id' as the key:
-		return b.Put(itob(user.ID), encoded)
+		keyName := strconv.FormatInt(user.ID, 10)
+		return b.Put([]byte(keyName), encoded)
 	})
 
 	//	Set our return value:
@@ -129,11 +133,4 @@ func (store SystemDB) GetAllUsers() ([]User, error) {
 
 	//	Return our slice:
 	return retval, nil
-}
-
-// itob returns an 8-byte big endian representation of v.
-func itob(v int) []byte {
-	b := make([]byte, 8)
-	binary.BigEndian.PutUint64(b, uint64(v))
-	return b
 }

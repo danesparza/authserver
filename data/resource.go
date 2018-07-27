@@ -7,7 +7,7 @@ import (
 // Resource represents an application / resource / service in the system
 // It is associated with users (and user roles)
 type Resource struct {
-	ID          int       `json:"id"`
+	ID          int64     `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	Created     time.Time `json:"created"`

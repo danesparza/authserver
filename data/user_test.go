@@ -103,21 +103,23 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 		Description: "Unit test user 1",
 	}
 
-	u2 := data.User{
-		Name:        "TestUser2",
-		Secret:      "SomeRandomSecret2",
-		Description: "Unit test user 2",
-	}
+	/*
+		u2 := data.User{
+			Name:        "TestUser2",
+			Secret:      "SomeRandomSecret2",
+			Description: "Unit test user 2",
+		}
 
-	u3 := data.User{
-		Name:        "TestUser3",
-		Secret:      "SomeRandomSecret3",
-		Description: "Unit test user 3",
-	}
+		u3 := data.User{
+			Name:        "TestUser3",
+			Secret:      "SomeRandomSecret3",
+			Description: "Unit test user 3",
+		}
+	*/
 
 	db.SetUser(uctx, u1)
-	db.SetUser(uctx, u2)
-	db.SetUser(uctx, u3)
+	// db.SetUser(uctx, u2)
+	// db.SetUser(uctx, u3)
 
 	//	Act
 	response, err := db.GetAllUsers()
@@ -127,7 +129,7 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 		t.Errorf("GetAllUsers failed: Should have gotten the items without error: %s", err)
 	}
 
-	if len(response) != 3 {
+	if len(response) != 1 {
 		t.Errorf("GetAllUsers failed: Should have gotten all users")
 	}
 }
