@@ -14,5 +14,4 @@ jobs:
 
       # specify any bash command here prefixed with `run: `
       - run: go get -v -t -d ./...
-      - run: go test -v -race ./... || true
-      - run: ls -l /tmp 
+      - run: go test -v -race ./... 
