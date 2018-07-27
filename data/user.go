@@ -98,7 +98,7 @@ func (store SystemDB) GetAllUsers() ([]User, error) {
 
 		b := tx.Bucket([]byte("users"))
 		if b == nil {
-			return fmt.Errorf("There was a problem getting the user bucket")
+			return nil
 		}
 
 		c := b.Cursor()
