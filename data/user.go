@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/boltdb/bolt"
+	bolt "github.com/coreos/bbolt"
 )
 
 // User represents a user in the system.  Users
