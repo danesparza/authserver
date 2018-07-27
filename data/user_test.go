@@ -105,23 +105,32 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 	}
 
 	//	Try storing some users:
-	db.SetUser(uctx, data.User{
+	_, err := db.SetUser(uctx, data.User{
 		Name:        "TestUser1",
 		Secret:      "SomeRandomSecret1",
 		Description: "Unit test user 1",
 	})
+	if err != nil {
+		t.Errorf("SetUser 1 failed: Should have created users without error: %s", err)
+	}
 
-	db.SetUser(uctx, data.User{
+	_, err = db.SetUser(uctx, data.User{
 		Name:        "TestUser2",
 		Secret:      "SomeRandomSecret2",
 		Description: "Unit test user 2",
 	})
+	if err != nil {
+		t.Errorf("SetUser 2 failed: Should have created users without error: %s", err)
+	}
 
-	db.SetUser(uctx, data.User{
+	_, err = db.SetUser(uctx, data.User{
 		Name:        "TestUser3",
 		Secret:      "SomeRandomSecret3",
 		Description: "Unit test user 3",
 	})
+	if err != nil {
+		t.Errorf("SetUser 3 failed: Should have created users without error: %s", err)
+	}
 
 	//	Act
 	response, err := db.GetAllUsers()
