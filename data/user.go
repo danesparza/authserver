@@ -47,7 +47,7 @@ func (store SystemDB) SetUser(context, user User) (User, error) {
 	retval := User{}
 
 	//	Open the database
-	db, err := bolt.Open(store.Database, 600, nil)
+	db, err := bolt.Open(store.Database, 600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		return retval, err
 	}
@@ -100,7 +100,7 @@ func (store SystemDB) GetAllUsers() ([]User, error) {
 	retval := []User{}
 
 	//	Open the database:
-	db, err := bolt.Open(store.Database, 0600, nil)
+	db, err := bolt.Open(store.Database, 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		return retval, err
 	}
