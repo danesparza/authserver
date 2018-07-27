@@ -2,6 +2,7 @@ package data
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -49,7 +50,7 @@ func (store SystemDB) SetUser(context, user User) (User, error) {
 	//	Open the database
 	db, err := bolt.Open(store.Database, 600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
-		return retval, err
+		return retval, fmt.Errorf("An error occurred setting a user: %s", err)
 	}
 	defer db.Close()
 
@@ -57,14 +58,14 @@ func (store SystemDB) SetUser(context, user User) (User, error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte("users"))
 		if err != nil {
-			return err
+			return fmt.Errorf("An error occurred getting the user bucket: %s", err)
 		}
 
 		// Generate ID for the user if needed.
 		if user.ID == 0 {
 			id, err := b.NextSequence()
 			if err != nil {
-				return err
+				return fmt.Errorf("An error occurred getting a userid: %s", err)
 			}
 			user.ID = int64(id)
 		}
@@ -102,7 +103,7 @@ func (store SystemDB) GetAllUsers() ([]User, error) {
 	//	Open the database:
 	db, err := bolt.Open(store.Database, 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
-		return retval, err
+		return retval, fmt.Errorf("An error occurred getting all users: %s", err)
 	}
 	defer db.Close()
 
@@ -111,7 +112,7 @@ func (store SystemDB) GetAllUsers() ([]User, error) {
 
 		b := tx.Bucket([]byte("users"))
 		if b == nil {
-			return nil
+			return fmt.Errorf("An error occurred getting the user bucket: %s", err)
 		}
 
 		c := b.Cursor()
@@ -121,7 +122,7 @@ func (store SystemDB) GetAllUsers() ([]User, error) {
 			//	Unmarshal data into our config item
 			user := User{}
 			if err := json.Unmarshal(v, &user); err != nil {
-				return err
+				return fmt.Errorf("An error occurred deserializing all users: %s", err)
 			}
 
 			//	Add to the return slice:
