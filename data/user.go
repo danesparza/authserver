@@ -47,15 +47,8 @@ func (store SystemDB) SetUser(context, user User) (User, error) {
 	//	Our return item
 	retval := User{}
 
-	//	Open the database
-	db, err := bolt.Open(store.Database, 600, &bolt.Options{Timeout: 1 * time.Second})
-	if err != nil {
-		return retval, fmt.Errorf("An error occurred setting a user: %s", err)
-	}
-	defer db.Close()
-
 	//	Update the database:
-	err = db.Update(func(tx *bolt.Tx) error {
+	err := store.db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte("users"))
 		if err != nil {
 			return fmt.Errorf("An error occurred getting the user bucket: %s", err)
@@ -100,19 +93,12 @@ func (store SystemDB) SetUser(context, user User) (User, error) {
 func (store SystemDB) GetAllUsers() ([]User, error) {
 	retval := []User{}
 
-	//	Open the database:
-	db, err := bolt.Open(store.Database, 0600, &bolt.Options{Timeout: 1 * time.Second})
-	if err != nil {
-		return retval, fmt.Errorf("An error occurred getting all users: %s", err)
-	}
-	defer db.Close()
-
 	//	Get all the items:
-	err = db.View(func(tx *bolt.Tx) error {
+	err := store.db.View(func(tx *bolt.Tx) error {
 
 		b := tx.Bucket([]byte("users"))
 		if b == nil {
-			return fmt.Errorf("An error occurred getting the user bucket: %s", err)
+			return fmt.Errorf("There was a problem getting the user bucket")
 		}
 
 		c := b.Cursor()
@@ -133,5 +119,5 @@ func (store SystemDB) GetAllUsers() ([]User, error) {
 	})
 
 	//	Return our slice:
-	return retval, nil
+	return retval, err
 }

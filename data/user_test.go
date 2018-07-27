@@ -94,10 +94,13 @@ func TestUser_GetAllUsers_NoItems_NoErrors(t *testing.T) {
 func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 	//	Arrange
 	filename := getTestFile()
-	// defer os.Remove(filename)
+	defer os.Remove(filename)
 
-	db := data.SystemDB{
-		Database: filename}
+	db, err := data.NewSystemDB(filename)
+	if err != nil {
+		t.Errorf("NewSystemDB failed: %s", err)
+	}
+	defer db.Close()
 
 	//	Our 'context' user (the one performing the action)
 	uctx := data.User{
@@ -105,7 +108,7 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 	}
 
 	//	Try storing some users:
-	_, err := db.SetUser(uctx, data.User{
+	_, err = db.SetUser(uctx, data.User{
 		Name:        "TestUser1",
 		Secret:      "SomeRandomSecret1",
 		Description: "Unit test user 1",
