@@ -15,7 +15,7 @@ type SystemDB struct {
 // TokenDB is the BoltDB database for
 // token storage
 type TokenDB struct {
-	Database string
+	db *bolt.DB
 }
 
 // NewSystemDB creates a new instance of a SystemDB

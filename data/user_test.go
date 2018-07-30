@@ -1,17 +1,11 @@
 package data_test
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
 	"github.com/danesparza/authserver/data"
 )
-
-//	Gets the database path for this environment:
-func getTestFile() string {
-	return fmt.Sprintf("%s/testdatabase.db", os.TempDir())
-}
 
 func TestUser_Database_ShouldNotExistYet(t *testing.T) {
 	//	Arrange

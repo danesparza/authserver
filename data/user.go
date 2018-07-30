@@ -54,7 +54,7 @@ func (store SystemDB) SetUser(context, user User) (User, error) {
 			return fmt.Errorf("An error occurred getting the user bucket: %s", err)
 		}
 
-		// Generate ID for the user if needed.
+		// Generate ID for the user if we're adding a new one.
 		if user.ID == 0 {
 			id, err := b.NextSequence()
 			if err != nil {
@@ -106,13 +106,13 @@ func (store SystemDB) GetAllUsers() ([]User, error) {
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 
 			//	Unmarshal data into our config item
-			user := User{}
-			if err := json.Unmarshal(v, &user); err != nil {
+			item := User{}
+			if err := json.Unmarshal(v, &item); err != nil {
 				return fmt.Errorf("An error occurred deserializing all users: %s", err)
 			}
 
 			//	Add to the return slice:
-			retval = append(retval, user)
+			retval = append(retval, item)
 		}
 
 		return nil
