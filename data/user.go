@@ -47,8 +47,20 @@ func (store SystemDB) SetUser(context, user User) (User, error) {
 	//	Our return item
 	retval := User{}
 
+	//	Log the request:
+	fields := map[string]interface{}{
+		"context_name": context.Name,
+		"context_id":   context.ID,
+		"user_name":    user.Name,
+		"user_id":      user.ID,
+	}
+	err := store.Log("user_activity", "SetUser_Request", fields)
+	if err != nil {
+		return retval, fmt.Errorf("An error occurred logging data: %s", err)
+	}
+
 	//	Update the database:
-	err := store.db.Update(func(tx *bolt.Tx) error {
+	err = store.db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte("users"))
 		if err != nil {
 			return fmt.Errorf("An error occurred getting the user bucket: %s", err)
@@ -86,15 +98,36 @@ func (store SystemDB) SetUser(context, user User) (User, error) {
 	//	Set our return value:
 	retval = user
 
+	fields = map[string]interface{}{
+		"context_name": context.Name,
+		"context_id":   context.ID,
+		"user_name":    retval.Name,
+		"user_id":      retval.ID,
+	}
+	err = store.Log("user_activity", "SetUser_Response", fields)
+	if err != nil {
+		return retval, fmt.Errorf("An error occurred logging data: %s", err)
+	}
+
 	return retval, err
 }
 
 // GetAllUsers returns an array of all users
-func (store SystemDB) GetAllUsers() ([]User, error) {
+func (store SystemDB) GetAllUsers(context User) ([]User, error) {
 	retval := []User{}
 
+	//	Log the request:
+	fields := map[string]interface{}{
+		"context_name": context.Name,
+		"context_id":   context.ID,
+	}
+	err := store.Log("user_activity", "GetAllUsers_Request", fields)
+	if err != nil {
+		return retval, fmt.Errorf("An error occurred logging data: %s", err)
+	}
+
 	//	Get all the items:
-	err := store.db.View(func(tx *bolt.Tx) error {
+	err = store.db.View(func(tx *bolt.Tx) error {
 
 		b := tx.Bucket([]byte("users"))
 		if b == nil {
@@ -118,6 +151,24 @@ func (store SystemDB) GetAllUsers() ([]User, error) {
 		return nil
 	})
 
+	fields = map[string]interface{}{
+		"context_name": context.Name,
+		"context_id":   context.ID,
+		"count":        len(retval),
+	}
+	err = store.Log("user_activity", "GetAllUsers_Response", fields)
+	if err != nil {
+		return retval, fmt.Errorf("An error occurred logging data: %s", err)
+	}
+
 	//	Return our slice:
 	return retval, err
+}
+
+// AddUserToResourceRole adds the specified user to the resource role.
+// Returns an error if the user, resource, or role don't already exist
+func (store SystemDB) AddUserToResourceRole(context, user User, resource Resource, role Role) error {
+
+	// Return without error
+	return nil
 }

@@ -7,6 +7,10 @@ import (
 	"github.com/danesparza/authserver/data"
 )
 
+func TestInitialization(t *testing.T) {
+	t.Logf("Using UNITTEST_INFLUX_URL: %s", os.Getenv("UNITTEST_INFLUX_URL"))
+}
+
 func TestUser_Database_ShouldNotExistYet(t *testing.T) {
 	//	Arrange
 	filename := getTestFile()
@@ -24,7 +28,7 @@ func TestUser_Set_Successful(t *testing.T) {
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename)
+	db, err := data.NewSystemDB(filename, os.Getenv("UNITTEST_INFLUX_URL"))
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
@@ -68,16 +72,21 @@ func TestUser_GetAllUsers_NoItems_NoErrors(t *testing.T) {
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename)
+	db, err := data.NewSystemDB(filename, os.Getenv("UNITTEST_INFLUX_URL"))
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
 	defer db.Close()
 
+	//	Our 'context' user (the one performing the action)
+	uctx := data.User{
+		Name: "Admin",
+	}
+
 	//	No items are in the database!
 
 	//	Act
-	response, err := db.GetAllUsers()
+	response, err := db.GetAllUsers(uctx)
 
 	//	Assert
 	if err != nil {
@@ -94,7 +103,7 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename)
+	db, err := data.NewSystemDB(filename, os.Getenv("UNITTEST_INFLUX_URL"))
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
@@ -134,7 +143,7 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 	}
 
 	//	Act
-	response, err := db.GetAllUsers()
+	response, err := db.GetAllUsers(uctx)
 
 	//	Assert
 	if err != nil {
