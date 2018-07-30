@@ -33,7 +33,7 @@ func (store SystemDB) SetResource(context User, resource Resource) (Resource, er
 	err := store.db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte("resources"))
 		if err != nil {
-			return fmt.Errorf("An error occurred getting the user bucket: %s", err)
+			return fmt.Errorf("An error occurred getting the resource bucket: %s", err)
 		}
 
 		// Generate ID for the resource if we're adding a new one.
@@ -71,7 +71,7 @@ func (store SystemDB) SetResource(context User, resource Resource) (Resource, er
 	return retval, err
 }
 
-// GetAllResources returns an array of all users
+// GetAllResources returns an array of all resources
 func (store SystemDB) GetAllResources() ([]Resource, error) {
 	retval := []Resource{}
 
