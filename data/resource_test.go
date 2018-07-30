@@ -80,7 +80,7 @@ func TestResource_GetAllResources_NoItems_NoErrors(t *testing.T) {
 
 	//	Assert
 	if err != nil {
-		t.Errorf("GetAllResources failed: Should have gotten all users without error: %s", err)
+		t.Errorf("GetAllResources failed: Should have gotten all items without error: %s", err)
 	}
 
 	if len(response) != 0 {
