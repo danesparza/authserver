@@ -29,6 +29,8 @@ func (store SystemDB) SetResource(context User, resource Resource) (Resource, er
 	//	Our return item
 	retval := Resource{}
 
+	//	Validate:  Does the context user have permission to execute the request?
+
 	//	Log the request:
 	fields := map[string]interface{}{
 		"context_name":  context.Name,
@@ -146,3 +148,7 @@ func (store SystemDB) GetAllResources(context User) ([]Resource, error) {
 	//	Return our slice:
 	return retval, err
 }
+
+//	GetResourceById - used for lookups / validation before relating data
+
+//	GetResourceByName - used for resource checks

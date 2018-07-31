@@ -17,7 +17,7 @@ type User struct {
 	ID          int64     `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
-	Secret      string    `json:"secret"`
+	SecretHash  string    `json:"secrethash"`
 	Created     time.Time `json:"created"`
 	CreatedBy   string    `json:"created_by"`
 	Updated     time.Time `json:"updated"`
@@ -26,10 +26,10 @@ type User struct {
 	DeletedBy   string    `json:"deleted_by"`
 }
 
-// UserResourceRoles defines a relationship between a user,
-// a resource/application/service, and the roles that user has
-// been assigned within the application/resource/service
-type UserResourceRoles struct {
+// UserResourceRole defines a relationship between a user,
+// a resource (application/service), and the roles that user has
+// been assigned within the resource (application/service)
+type UserResourceRole struct {
 	UserID     int64     `json:"userid"`
 	ResourceID int64     `json:"resourceid"`
 	RoleID     int64     `json:"roleid"`
@@ -46,6 +46,8 @@ func (store SystemDB) SetUser(context, user User) (User, error) {
 
 	//	Our return item
 	retval := User{}
+
+	//	Validate:  Does the context user have permission to make the change?
 
 	//	Log the request:
 	fields := map[string]interface{}{
@@ -165,10 +167,25 @@ func (store SystemDB) GetAllUsers(context User) ([]User, error) {
 	return retval, err
 }
 
+//	GetUserByName - used for token creation process (to login a user)
+
+//	GetUserById - used for lookups / validation before relating data
+
 // AddUserToResourceRole adds the specified user to the resource role.
 // Returns an error if the user, resource, or role don't already exist
-func (store SystemDB) AddUserToResourceRole(context, user User, resource Resource, role Role) error {
+func (store SystemDB) AddUserToResourceRole(context User, urr UserResourceRole) (UserResourceRole, error) {
 
-	// Return without error
-	return nil
+	//	Our return item
+	retval := UserResourceRole{}
+
+	//	Get the user/resource/role - make sure they all exist.
+	//	Throw an error if one of them doesn't exist in the system
+
+	//	Create a compound key based on all 3 ids
+
+	//	Add / update the item in the system
+
+	//	Return our result
+
+	return retval, nil
 }

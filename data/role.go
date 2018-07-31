@@ -146,3 +146,7 @@ func (store SystemDB) GetAllRoles(context User) ([]Role, error) {
 	//	Return our slice:
 	return retval, err
 }
+
+//	GetRoleById - used for lookups / validation before relating data
+
+//	GetRoleByName - used for role checks
