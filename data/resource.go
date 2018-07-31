@@ -29,8 +29,20 @@ func (store SystemDB) SetResource(context User, resource Resource) (Resource, er
 	//	Our return item
 	retval := Resource{}
 
+	//	Log the request:
+	fields := map[string]interface{}{
+		"context_name":  context.Name,
+		"context_id":    context.ID,
+		"resource_name": resource.Name,
+		"resource_id":   resource.ID,
+	}
+	err := store.Log("resource_activity", "SetResource_Request", fields)
+	if err != nil {
+		return retval, fmt.Errorf("An error occurred logging data: %s", err)
+	}
+
 	//	Update the database:
-	err := store.db.Update(func(tx *bolt.Tx) error {
+	err = store.db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte("resources"))
 		if err != nil {
 			return fmt.Errorf("An error occurred getting the resource bucket: %s", err)
@@ -68,15 +80,36 @@ func (store SystemDB) SetResource(context User, resource Resource) (Resource, er
 	//	Set our return value:
 	retval = resource
 
+	fields = map[string]interface{}{
+		"context_name":  context.Name,
+		"context_id":    context.ID,
+		"resource_name": retval.Name,
+		"resource_id":   retval.ID,
+	}
+	err = store.Log("resource_activity", "SetResource_Response", fields)
+	if err != nil {
+		return retval, fmt.Errorf("An error occurred logging data: %s", err)
+	}
+
 	return retval, err
 }
 
 // GetAllResources returns an array of all resources
-func (store SystemDB) GetAllResources() ([]Resource, error) {
+func (store SystemDB) GetAllResources(context User) ([]Resource, error) {
 	retval := []Resource{}
 
+	//	Log the request:
+	fields := map[string]interface{}{
+		"context_name": context.Name,
+		"context_id":   context.ID,
+	}
+	err := store.Log("resource_activity", "GetAllResources_Request", fields)
+	if err != nil {
+		return retval, fmt.Errorf("An error occurred logging data: %s", err)
+	}
+
 	//	Get all the items:
-	err := store.db.View(func(tx *bolt.Tx) error {
+	err = store.db.View(func(tx *bolt.Tx) error {
 
 		b := tx.Bucket([]byte("resources"))
 		if b == nil {
@@ -99,6 +132,16 @@ func (store SystemDB) GetAllResources() ([]Resource, error) {
 
 		return nil
 	})
+
+	fields = map[string]interface{}{
+		"context_name": context.Name,
+		"context_id":   context.ID,
+		"count":        len(retval),
+	}
+	err = store.Log("resource_activity", "GetAllResources_Response", fields)
+	if err != nil {
+		return retval, fmt.Errorf("An error occurred logging data: %s", err)
+	}
 
 	//	Return our slice:
 	return retval, err

@@ -24,7 +24,7 @@ func TestResource_Set_Successful(t *testing.T) {
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename, "")
+	db, err := data.NewSystemDB(filename, os.Getenv("UNITTEST_INFLUX_URL"))
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
@@ -67,16 +67,21 @@ func TestResource_GetAllResources_NoItems_NoErrors(t *testing.T) {
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename, "")
+	db, err := data.NewSystemDB(filename, os.Getenv("UNITTEST_INFLUX_URL"))
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
 	defer db.Close()
 
+	//	Our 'context' user (the one performing the action)
+	uctx := data.User{
+		Name: "Admin",
+	}
+
 	//	No items are in the database!
 
 	//	Act
-	response, err := db.GetAllResources()
+	response, err := db.GetAllResources(uctx)
 
 	//	Assert
 	if err != nil {
@@ -93,7 +98,7 @@ func TestResource_GetAllResources_ItemsInDB_ReturnsItems(t *testing.T) {
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename, "")
+	db, err := data.NewSystemDB(filename, os.Getenv("UNITTEST_INFLUX_URL"))
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
@@ -122,7 +127,7 @@ func TestResource_GetAllResources_ItemsInDB_ReturnsItems(t *testing.T) {
 	}
 
 	//	Act
-	response, err := db.GetAllResources()
+	response, err := db.GetAllResources(uctx)
 
 	//	Assert
 	if err != nil {
