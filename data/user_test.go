@@ -42,7 +42,7 @@ func TestUser_Set_Successful(t *testing.T) {
 	//	Create new user:
 	u1 := data.User{
 		Name:        "TestUser1",
-		Secret:      "SomeRandomSecret",
+		SecretHash:  "SomeRandomSecret",
 		Description: "Unit test user",
 	}
 
@@ -117,7 +117,7 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 	//	Try storing some users:
 	_, err = db.SetUser(uctx, data.User{
 		Name:        "TestUser1",
-		Secret:      "SomeRandomSecret1",
+		SecretHash:  "SomeRandomSecret1",
 		Description: "Unit test user 1",
 	})
 	if err != nil {
@@ -126,7 +126,7 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 
 	_, err = db.SetUser(uctx, data.User{
 		Name:        "TestUser2",
-		Secret:      "SomeRandomSecret2",
+		SecretHash:  "SomeRandomSecret2",
 		Description: "Unit test user 2",
 	})
 	if err != nil {
@@ -135,7 +135,7 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 
 	_, err = db.SetUser(uctx, data.User{
 		Name:        "TestUser3",
-		Secret:      "SomeRandomSecret3",
+		SecretHash:  "SomeRandomSecret3",
 		Description: "Unit test user 3",
 	})
 	if err != nil {
