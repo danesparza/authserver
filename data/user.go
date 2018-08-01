@@ -176,7 +176,67 @@ func (store SystemDB) GetAllUsers(context User) ([]User, error) {
 	return retval, err
 }
 
-//	GetUserByName - used for token creation process (to login a user)
+// GetUserWithCredentials - used for token creation process (to login a user)
+func (store SystemDB) GetUserWithCredentials(name, secret string) (User, string, error) {
+	retUser := User{}
+	retToken := ""
+
+	//	Log the request:
+	fields := map[string]interface{}{
+		"context_name": "system",
+		"context_id":   0,
+		"user_name":    name,
+	}
+	err := store.Log("user_activity", "GetUserWithCredentials_Request", fields)
+	if err != nil {
+		return retUser, retToken, fmt.Errorf("An error occurred logging data: %s", err)
+	}
+
+	//	Get all the items:
+	err = store.db.View(func(tx *bolt.Tx) error {
+
+		b := tx.Bucket([]byte("users"))
+		if b == nil {
+			return nil
+		}
+
+		c := b.Cursor()
+
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+
+			//	Unmarshal data into our item
+			item := User{}
+			if err := json.Unmarshal(v, &item); err != nil {
+				return fmt.Errorf("An error occurred deserializing user: %s", err)
+			}
+
+			//	Is this the item we're looking for?
+
+			//	If it is, return it
+			retUser = item
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return retUser, retToken, fmt.Errorf("An error occurred getting user: %s", err)
+	}
+
+	fields = map[string]interface{}{
+		"context_name": "system",
+		"context_id":   0,
+		"user_name":    retUser.Name,
+		"user_id":      retUser.ID,
+	}
+	err = store.Log("user_activity", "GetUserWithCredentials_Response", fields)
+	if err != nil {
+		return retUser, retToken, fmt.Errorf("An error occurred logging data: %s", err)
+	}
+
+	//	Return our user:
+	return retUser, retToken, err
+}
 
 // GetUserByID - used for lookups / validation before relating data
 func (store SystemDB) GetUserByID(context User, userID int64) (User, error) {
