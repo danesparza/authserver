@@ -154,3 +154,148 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 		t.Errorf("GetAllUsers failed: Should have gotten all users")
 	}
 }
+
+func TestUser_GetUserByID_IdDoesntExist_Successful(t *testing.T) {
+	//	Arrange
+	filename := getTestFile()
+	defer os.Remove(filename)
+
+	db, err := data.NewSystemDB(filename, os.Getenv("UNITTEST_INFLUX_URL"))
+	if err != nil {
+		t.Errorf("NewSystemDB failed: %s", err)
+	}
+	defer db.Close()
+
+	//	Our 'context' user (the one performing the action)
+	uctx := data.User{
+		Name: "Admin",
+	}
+
+	//	Try storing some users:
+	_, err = db.SetUser(uctx, data.User{
+		Name:        "TestUser1",
+		SecretHash:  "SomeRandomSecret1",
+		Description: "Unit test user 1",
+	})
+	if err != nil {
+		t.Errorf("SetUser 1 failed: Should have created users without error: %s", err)
+	}
+
+	_, err = db.SetUser(uctx, data.User{
+		Name:        "TestUser2",
+		SecretHash:  "SomeRandomSecret2",
+		Description: "Unit test user 2",
+	})
+	if err != nil {
+		t.Errorf("SetUser 2 failed: Should have created users without error: %s", err)
+	}
+
+	_, err = db.SetUser(uctx, data.User{
+		Name:        "TestUser3",
+		SecretHash:  "SomeRandomSecret3",
+		Description: "Unit test user 3",
+	})
+	if err != nil {
+		t.Errorf("SetUser 3 failed: Should have created users without error: %s", err)
+	}
+
+	//	Act
+	response, err := db.GetUserByID(uctx, 42)
+
+	//	Assert
+	if err != nil {
+		t.Errorf("GetUserByID failed: Should get an item without error: %s", err)
+	}
+
+	if response.ID != 0 {
+		t.Errorf("GetUserByID failed: Should fetch a blank item: %+v", response)
+	}
+}
+
+func TestUser_GetUserByID_Successful(t *testing.T) {
+	//	Arrange
+	filename := getTestFile()
+	defer os.Remove(filename)
+
+	db, err := data.NewSystemDB(filename, os.Getenv("UNITTEST_INFLUX_URL"))
+	if err != nil {
+		t.Errorf("NewSystemDB failed: %s", err)
+	}
+	defer db.Close()
+
+	//	Our 'context' user (the one performing the action)
+	uctx := data.User{
+		Name: "Admin",
+	}
+
+	//	Try storing some users:
+	_, err = db.SetUser(uctx, data.User{
+		Name:        "TestUser1",
+		SecretHash:  "SomeRandomSecret1",
+		Description: "Unit test user 1",
+	})
+	if err != nil {
+		t.Errorf("SetUser 1 failed: Should have created users without error: %s", err)
+	}
+
+	_, err = db.SetUser(uctx, data.User{
+		Name:        "TestUser2",
+		SecretHash:  "SomeRandomSecret2",
+		Description: "Unit test user 2",
+	})
+	if err != nil {
+		t.Errorf("SetUser 2 failed: Should have created users without error: %s", err)
+	}
+
+	_, err = db.SetUser(uctx, data.User{
+		Name:        "TestUser3",
+		SecretHash:  "SomeRandomSecret3",
+		Description: "Unit test user 3",
+	})
+	if err != nil {
+		t.Errorf("SetUser 3 failed: Should have created users without error: %s", err)
+	}
+
+	//	Act
+	response, err := db.GetUserByID(uctx, 2)
+
+	//	Assert
+	if err != nil {
+		t.Errorf("GetUserByID failed: Should get an item without error: %s", err)
+	}
+
+	if response.Name != "TestUser2" {
+		t.Errorf("GetUserByID failed: Should get an item with the correct name: %+v", response)
+	}
+}
+
+func TestUser_GetUserByID_NoData_Successful(t *testing.T) {
+	//	Arrange
+	filename := getTestFile()
+	defer os.Remove(filename)
+
+	db, err := data.NewSystemDB(filename, os.Getenv("UNITTEST_INFLUX_URL"))
+	if err != nil {
+		t.Errorf("NewSystemDB failed: %s", err)
+	}
+	defer db.Close()
+
+	//	Our 'context' user (the one performing the action)
+	uctx := data.User{
+		Name: "Admin",
+	}
+
+	//	No data exists yet!
+
+	//	Act
+	response, err := db.GetUserByID(uctx, 1)
+
+	//	Assert
+	if err != nil {
+		t.Errorf("GetUserByID failed: Should get an item without error: %s", err)
+	}
+
+	if response.ID != 0 {
+		t.Errorf("GetUserByID failed: Should fetch a blank item: %+v", response)
+	}
+}

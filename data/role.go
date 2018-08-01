@@ -120,7 +120,7 @@ func (store SystemDB) GetAllRoles(context User) ([]Role, error) {
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 
-			//	Unmarshal data into our config item
+			//	Unmarshal data into our item
 			item := Role{}
 			if err := json.Unmarshal(v, &item); err != nil {
 				return fmt.Errorf("An error occurred deserializing all roles: %s", err)

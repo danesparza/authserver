@@ -12,9 +12,10 @@ import (
 // User represents a user in the system.  Users
 // are associated with resources and roles within those applications/resources/services.
 // They can be created/updated/deleted.  If they are deleted, eventually
-// they will be removed from the system
+// they will be removed from the system.  The admin user can only be disabled, not deleted
 type User struct {
 	ID          int64     `json:"id"`
+	Enabled     bool      `json:"enabled"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	SecretHash  string    `json:"secrethash"`
@@ -97,6 +98,10 @@ func (store SystemDB) SetUser(context, user User) (User, error) {
 		return b.Put([]byte(keyName), encoded)
 	})
 
+	if err != nil {
+		return retval, fmt.Errorf("An error occurred updating user: %s", err)
+	}
+
 	//	Set our return value:
 	retval = user
 
@@ -140,7 +145,7 @@ func (store SystemDB) GetAllUsers(context User) ([]User, error) {
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 
-			//	Unmarshal data into our config item
+			//	Unmarshal data into our item
 			item := User{}
 			if err := json.Unmarshal(v, &item); err != nil {
 				return fmt.Errorf("An error occurred deserializing all users: %s", err)
@@ -152,6 +157,10 @@ func (store SystemDB) GetAllUsers(context User) ([]User, error) {
 
 		return nil
 	})
+
+	if err != nil {
+		return retval, fmt.Errorf("An error occurred getting all users: %s", err)
+	}
 
 	fields = map[string]interface{}{
 		"context_name": context.Name,
@@ -169,7 +178,64 @@ func (store SystemDB) GetAllUsers(context User) ([]User, error) {
 
 //	GetUserByName - used for token creation process (to login a user)
 
-//	GetUserById - used for lookups / validation before relating data
+// GetUserByID - used for lookups / validation before relating data
+func (store SystemDB) GetUserByID(context User, userID int64) (User, error) {
+	retval := User{}
+
+	//	Log the request:
+	fields := map[string]interface{}{
+		"context_name": context.Name,
+		"context_id":   context.ID,
+		"user_id":      userID,
+	}
+	err := store.Log("user_activity", "GetUserByID_Request", fields)
+	if err != nil {
+		return retval, fmt.Errorf("An error occurred logging data: %s", err)
+	}
+
+	//	Open a read-only view to the data
+	err = store.db.View(func(tx *bolt.Tx) error {
+
+		//	Get our bucket
+		b := tx.Bucket([]byte("users"))
+
+		if b != nil {
+			//	Determine our keyname:
+			keyname := strconv.FormatInt(userID, 10)
+
+			//	Get the data for the key:
+			itemBytes := b.Get([]byte(keyname))
+
+			if len(itemBytes) > 0 {
+
+				//	Unmarshal data into our item
+				if err := json.Unmarshal(itemBytes, &retval); err != nil {
+					return err
+				}
+			}
+		}
+
+		//	Set our return value:
+		return nil
+	})
+	if err != nil {
+		return retval, fmt.Errorf("An error occurred fetching user: %s", err)
+	}
+
+	fields = map[string]interface{}{
+		"context_name": context.Name,
+		"context_id":   context.ID,
+		"user_id":      retval.ID,
+		"user_name":    retval.Name,
+	}
+	err = store.Log("user_activity", "GetUserByID_Response", fields)
+	if err != nil {
+		return retval, fmt.Errorf("An error occurred logging data: %s", err)
+	}
+
+	//	Return our item:
+	return retval, nil
+}
 
 // AddUserToResourceRole adds the specified user to the resource role.
 // Returns an error if the user, resource, or role don't already exist

@@ -122,7 +122,7 @@ func (store SystemDB) GetAllResources(context User) ([]Resource, error) {
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 
-			//	Unmarshal data into our config item
+			//	Unmarshal data into our item
 			item := Resource{}
 			if err := json.Unmarshal(v, &item); err != nil {
 				return fmt.Errorf("An error occurred deserializing all resources: %s", err)
