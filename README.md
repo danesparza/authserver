@@ -9,3 +9,6 @@ Why reimplement OAuth in your app if you don't have to?
 * Generate a configuration file using `authserver config create`
 * Update the config file with your specific settings.
 * Start the service and admin UI using `authserver start`
+
+## Data model
+![Data model](https://github.com/danesparza/authserver/raw/master/data_model.svg?sanitize=true)
