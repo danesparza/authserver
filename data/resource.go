@@ -5,20 +5,23 @@ import (
 	"time"
 
 	_ "github.com/cznic/ql/driver"
+	null "gopkg.in/guregu/null.v3"
+	"gopkg.in/guregu/null.v3/zero"
 )
 
 // Resource represents an application / resource / service in the system
 // It is associated with users (and user roles)
 type Resource struct {
-	ID          int64     `json:"id"`
-	Name        string    `db:"name" json:"name"`
-	Description string    `db:"description" json:"description"`
-	Created     time.Time `db:"created" json:"created"`
-	CreatedBy   string    `db:"createdby" json:"created_by"`
-	Updated     time.Time `db:"updated" json:"updated"`
-	UpdatedBy   string    `db:"updatedby" json:"updated_by"`
-	Deleted     time.Time `db:"deleted" json:"deleted"`
-	DeletedBy   string    `db:"deletedby" json:"deleted_by"`
+	ID          int64       `json:"id"`
+	SysID       string      `json:"sysid"`
+	Name        string      `db:"name" json:"name"`
+	Description string      `db:"description" json:"description"`
+	Created     time.Time   `db:"created" json:"created"`
+	CreatedBy   string      `db:"createdby" json:"created_by"`
+	Updated     time.Time   `db:"updated" json:"updated"`
+	UpdatedBy   string      `db:"updatedby" json:"updated_by"`
+	Deleted     zero.Time   `db:"deleted" json:"deleted"`
+	DeletedBy   null.String `db:"deletedby" json:"deleted_by"`
 }
 
 // SetResource adds or updates a resource in the system

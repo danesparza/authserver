@@ -32,11 +32,14 @@ func TestRoot_Init_Successful(t *testing.T) {
 		t.Errorf("Init failed: Should init without error: %s", err)
 	}
 
-	if response.ID != 1 || response.Name != "Admin" {
+	if response.SysID != "bdldpjad2pm0cd64ra80" || response.Name != "admin" {
 		t.Errorf("Init failed: Should create admin user: %+v", response)
 	}
 
 	if secret == "" {
 		t.Errorf("Init failed: Should return admin user secret: %s", secret)
 	}
+
+	t.Logf("New Admin user: %+v", response)
+	t.Logf("New Admin user secret: %s", secret)
 }

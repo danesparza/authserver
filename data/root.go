@@ -12,32 +12,6 @@ import (
 	influxdb "github.com/influxdata/influxdb/client/v2"
 )
 
-var resourceSchema = `
-CREATE TABLE IF NOT EXISTS resource (
-    name string NOT NULL,
-    description string,
-	created time NOT NULL,
-	createdby string NOT NULL,
-	updated time NOT NULL,
-	updatedby string NOT NULL,
-	deleted time,
-	deletedby string
-);`
-
-var userSchema = `
-CREATE TABLE IF NOT EXISTS user (
-	enabled bool NOT NULL,
-    name string NOT NULL,
-	description string,
-	secrethash string,
-	created time NOT NULL,
-	createdby string NOT NULL,
-	updated time NOT NULL,
-	updatedby string NOT NULL,
-	deleted time,
-	deletedby string
-);`
-
 // SystemDB is the BoltDB database for
 // user/application/role storage
 type SystemDB struct {
@@ -126,64 +100,64 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 	adminUser := User{}
 	adminPassword := ""
 
-	//	Make sure our schemas exist
+	//	Start our database transaction
 	tx, err := store.db.Begin()
 	if err != nil {
-		return adminUser, adminPassword, fmt.Errorf("Problem starting a transaction to create schemas")
+		return adminUser, adminPassword, fmt.Errorf("Problem starting a transaction to bootstrap auth system")
 	}
 
+	//	Create our database schema
 	tx.Exec(resourceSchema)
+	tx.Exec(roleSchema)
 	tx.Exec(userSchema)
-	tx.Commit()
 
-	//	See if the admin user exists...
+	//	Generate a password
+	adminPassword = xid.New().String()
 
-	//	The admin user doesn't exist, so create it...
-	if adminUser.ID == 0 {
-
-		//	Generate a password
-		adminPassword = xid.New().String()
-
-		//	Hash the password
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
-		if err != nil {
-			return adminUser, adminPassword, fmt.Errorf("Problem hashing password: %s", err)
-		}
-
-		//	Create the user
-		adminUser = User{
-			Name:        "Admin",
-			Description: "System admin user",
-			SecretHash:  string(hashedPassword),
-		}
-
-		adminUser, err = store.SetUser(User{Name: "System"}, adminUser)
-		if err != nil {
-			return adminUser, adminPassword, fmt.Errorf("Problem creating admin user: %s", err)
-		}
+	//	Hash the password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return adminUser, adminPassword, fmt.Errorf("Problem hashing admin password: %s", err)
 	}
 
-	//	Make sure the system roles exist (create them if they don't)
+	//	Add our default admin user - the insert statement requires some parameters be passed:
+	resp, err := tx.Exec(defaultAdmin, adminSysID, string(hashedPassword))
+	if err != nil {
+		return adminUser, adminPassword, fmt.Errorf("Problem adding admin user: %s", err)
+	}
+
+	//	Create the default system roles and resources:
+
+	//	Commit our transaction
+	err = tx.Commit()
+	if err != nil {
+		return adminUser, adminPassword, fmt.Errorf("Problem committing a transaction to bootstrap auth system")
+	}
+
+	//	Get the admin id:
+	adminID, _ := resp.LastInsertId()
+
+	//	Get our admin user from the database and create our return object:
+	adminUser = User{}
+	err = store.db.Get(&adminUser, "SELECT * FROM user WHERE sysid=$1;", adminSysID)
+	if err != nil {
+		return adminUser, adminPassword, fmt.Errorf("Problem fetching admin user: %s", err)
+	}
+
+	adminUser.ID = adminID
+
+	/*  For reference.  Remove if no longer needed
 	systemRoles := []Role{
 		{Name: "admin", Description: "Admin role:  Can create/edit/delete all users/resources/roles"},
 		{Name: "editor", Description: "Editor role:  Can assign users/resources/roles"},
 		{Name: "reader", Description: "Reader role:  Can view users/resources/roles"},
 	}
 
-	for r := 0; r < len(systemRoles); r++ {
-		store.SetRole(adminUser, systemRoles[r])
-	}
-
-	//	Make sure the system resources exist (create them if they don't)
 	systemResources := []Resource{
 		{Name: "authserver", Description: "Authserver resource:  Defines authserver system access"},
 	}
 
-	for r := 0; r < len(systemResources); r++ {
-		store.SetResource(adminUser, systemResources[r])
-	}
-
-	//	Make sure the admin / resource /roles exist (create them if they don't)
+	*/
 
 	return adminUser, adminPassword, nil
 }

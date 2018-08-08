@@ -3,20 +3,24 @@ package data
 import (
 	"fmt"
 	"time"
+
+	null "gopkg.in/guregu/null.v3"
+	"gopkg.in/guregu/null.v3/zero"
 )
 
 // Role defines a role or permission that a user is assigned within an
 // application/role/service
 type Role struct {
-	ID          int64     `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Created     time.Time `json:"created"`
-	CreatedBy   string    `json:"created_by"`
-	Updated     time.Time `json:"updated"`
-	UpdatedBy   string    `json:"updated_by"`
-	Deleted     time.Time `json:"deleted"`
-	DeletedBy   string    `json:"deleted_by"`
+	ID          int64       `json:"id"`
+	SysID       string      `json:"sysid"`
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	Created     time.Time   `json:"created"`
+	CreatedBy   string      `json:"created_by"`
+	Updated     time.Time   `json:"updated"`
+	UpdatedBy   string      `json:"updated_by"`
+	Deleted     zero.Time   `db:"deleted" json:"deleted"`
+	DeletedBy   null.String `db:"deletedby" json:"deleted_by"`
 }
 
 // SetRole adds or updates a role in the system

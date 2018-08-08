@@ -3,6 +3,10 @@ package data
 import (
 	"fmt"
 	"time"
+
+	"gopkg.in/guregu/null.v3"
+
+	"gopkg.in/guregu/null.v3/zero"
 )
 
 // User represents a user in the system.  Users
@@ -10,17 +14,18 @@ import (
 // They can be created/updated/deleted.  If they are deleted, eventually
 // they will be removed from the system.  The admin user can only be disabled, not deleted
 type User struct {
-	ID          int64     `json:"id"`
-	Enabled     bool      `json:"enabled"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	SecretHash  string    `json:"secrethash"`
-	Created     time.Time `json:"created"`
-	CreatedBy   string    `json:"created_by"`
-	Updated     time.Time `json:"updated"`
-	UpdatedBy   string    `json:"updated_by"`
-	Deleted     time.Time `json:"deleted"`
-	DeletedBy   string    `json:"deleted_by"`
+	ID          int64       `json:"id"`
+	SysID       string      `db:"sysid" json:"sysid"`
+	Enabled     bool        `db:"enabled" json:"enabled"`
+	Name        string      `db:"name" json:"name"`
+	Description string      `db:"description" json:"description"`
+	SecretHash  string      `db:"secrethash" json:"secrethash"`
+	Created     time.Time   `db:"created" json:"created"`
+	CreatedBy   string      `db:"createdby" json:"created_by"`
+	Updated     time.Time   `db:"updated" json:"updated"`
+	UpdatedBy   string      `db:"updatedby" json:"updated_by"`
+	Deleted     zero.Time   `db:"deleted" json:"deleted"`
+	DeletedBy   null.String `db:"deletedby" json:"deleted_by"`
 }
 
 // UserResourceRole defines a relationship between a user,
