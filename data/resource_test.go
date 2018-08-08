@@ -33,7 +33,7 @@ func TestResource_Add_Successful(t *testing.T) {
 	//	Bootstrap
 	_, _, err = db.AuthSystemBootstrap()
 	if err != nil {
-		t.Errorf("GetAllResources failed: Should have bootstrapped without error: %s", err)
+		t.Errorf("AuthSystemBootstrap failed: Should have bootstrapped without error: %s", err)
 	}
 
 	//	Our 'context' user (the one performing the action)
@@ -82,7 +82,7 @@ func TestResource_GetAllResources_NoItems_NoErrors(t *testing.T) {
 	//	Bootstrap
 	_, _, err = db.AuthSystemBootstrap()
 	if err != nil {
-		t.Errorf("GetAllResources failed: Should have bootstrapped without error: %s", err)
+		t.Errorf("AuthSystemBootstrap failed: Should have bootstrapped without error: %s", err)
 	}
 
 	//	Our 'context' user (the one performing the action)
@@ -117,7 +117,7 @@ func TestResource_GetAllResources_ItemsInDB_ReturnsItems(t *testing.T) {
 	//	Bootstrap
 	_, _, err = db.AuthSystemBootstrap()
 	if err != nil {
-		t.Errorf("GetAllResources failed: Should have bootstrapped without error: %s", err)
+		t.Errorf("AuthSystemBootstrap failed: Should have bootstrapped without error: %s", err)
 	}
 
 	//	Our 'context' user (the one performing the action)

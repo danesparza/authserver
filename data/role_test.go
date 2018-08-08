@@ -19,7 +19,7 @@ func TestRole_Database_ShouldNotExistYet(t *testing.T) {
 	}
 }
 
-func TestRole_Set_Successful(t *testing.T) {
+func TestRole_AddRole_Successful(t *testing.T) {
 	//	Arrange
 	filename := getTestFile()
 	defer os.Remove(filename)
@@ -33,7 +33,7 @@ func TestRole_Set_Successful(t *testing.T) {
 	//	Bootstrap
 	_, _, err = db.AuthSystemBootstrap()
 	if err != nil {
-		t.Errorf("GetAllResources failed: Should have bootstrapped without error: %s", err)
+		t.Errorf("AuthSystemBootstrap failed: Should have bootstrapped without error: %s", err)
 	}
 
 	//	Our 'context' user (the one performing the action)
@@ -82,7 +82,7 @@ func TestRole_GetAllRoles_NoItems_NoErrors(t *testing.T) {
 	//	Bootstrap
 	_, _, err = db.AuthSystemBootstrap()
 	if err != nil {
-		t.Errorf("GetAllResources failed: Should have bootstrapped without error: %s", err)
+		t.Errorf("AuthSystemBootstrap failed: Should have bootstrapped without error: %s", err)
 	}
 
 	//	Our 'context' user (the one performing the action)
@@ -119,7 +119,7 @@ func TestRole_GetAllRoles_ItemsInDB_ReturnsItems(t *testing.T) {
 	//	Bootstrap
 	_, _, err = db.AuthSystemBootstrap()
 	if err != nil {
-		t.Errorf("GetAllResources failed: Should have bootstrapped without error: %s", err)
+		t.Errorf("AuthSystemBootstrap failed: Should have bootstrapped without error: %s", err)
 	}
 
 	//	Our 'context' user (the one performing the action)
