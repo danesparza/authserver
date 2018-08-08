@@ -19,7 +19,7 @@ func TestResource_Database_ShouldNotExistYet(t *testing.T) {
 	}
 }
 
-func TestResource_Set_Successful(t *testing.T) {
+func TestResource_Add_Successful(t *testing.T) {
 	//	Arrange
 	filename := getTestFile()
 	defer os.Remove(filename)
@@ -28,21 +28,13 @@ func TestResource_Set_Successful(t *testing.T) {
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("There was an error closing the database: %s", err)
-		}
+	defer db.Close()
 
-		t.Logf("Closed OK")
-	}()
-
-	//	Initialize the database
-	/*
-		_, _, err = db.Init()
-		if err != nil {
-			t.Errorf("Init failed: %s", err)
-		}
-	*/
+	//	Bootstrap
+	_, _, err = db.AuthSystemBootstrap()
+	if err != nil {
+		t.Errorf("GetAllResources failed: Should have bootstrapped without error: %s", err)
+	}
 
 	//	Our 'context' user (the one performing the action)
 	uctx := data.User{
@@ -56,7 +48,7 @@ func TestResource_Set_Successful(t *testing.T) {
 	}
 
 	//	Act
-	response, err := db.SetResource(uctx, r1)
+	response, err := db.AddResource(uctx, r1)
 
 	//	Assert
 	if err != nil {
@@ -85,21 +77,18 @@ func TestResource_GetAllResources_NoItems_NoErrors(t *testing.T) {
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
+	defer db.Close()
 
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("There was an error closing the database: %s", err)
-		}
-
-		t.Logf("Closed OK")
-	}()
+	//	Bootstrap
+	_, _, err = db.AuthSystemBootstrap()
+	if err != nil {
+		t.Errorf("GetAllResources failed: Should have bootstrapped without error: %s", err)
+	}
 
 	//	Our 'context' user (the one performing the action)
 	uctx := data.User{
 		Name: "Admin",
 	}
-
-	//	No items are in the database!
 
 	//	Act
 	response, err := db.GetAllResources(uctx)
@@ -123,14 +112,13 @@ func TestResource_GetAllResources_ItemsInDB_ReturnsItems(t *testing.T) {
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
+	defer db.Close()
 
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("There was an error closing the database: %s", err)
-		}
-
-		t.Logf("Closed OK")
-	}()
+	//	Bootstrap
+	_, _, err = db.AuthSystemBootstrap()
+	if err != nil {
+		t.Errorf("GetAllResources failed: Should have bootstrapped without error: %s", err)
+	}
 
 	//	Our 'context' user (the one performing the action)
 	uctx := data.User{
@@ -138,7 +126,7 @@ func TestResource_GetAllResources_ItemsInDB_ReturnsItems(t *testing.T) {
 	}
 
 	//	Try storing some resources:
-	_, err = db.SetResource(uctx, data.Resource{
+	_, err = db.AddResource(uctx, data.Resource{
 		Name:        "TestResource1",
 		Description: "Unit test resource 1",
 	})
@@ -146,7 +134,7 @@ func TestResource_GetAllResources_ItemsInDB_ReturnsItems(t *testing.T) {
 		t.Errorf("SetResource 1 failed: Should have created item without error: %s", err)
 	}
 
-	_, err = db.SetResource(uctx, data.Resource{
+	_, err = db.AddResource(uctx, data.Resource{
 		Name:        "TestResource2",
 		Description: "Unit test resource 2",
 	})

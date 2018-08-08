@@ -3,7 +3,7 @@ package data
 // resourceSchema defines the schema for the resource table
 var resourceSchema = `
 CREATE TABLE IF NOT EXISTS resource (
-	sysid string NOT NULL,
+	id string NOT NULL,
 	name string NOT NULL,
     description string,
 	created time NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS resource (
 // roleSchema defines the schema for the role table
 var roleSchema = `
 CREATE TABLE IF NOT EXISTS role (
-	sysid string NOT NULL,
+	id string NOT NULL,
 	name string NOT NULL,
     description string,
 	created time NOT NULL,
