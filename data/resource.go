@@ -1,26 +1,24 @@
 package data
 
 import (
-	"encoding/json"
 	"fmt"
-	"strconv"
 	"time"
 
-	bolt "github.com/coreos/bbolt"
+	_ "github.com/cznic/ql/driver"
 )
 
 // Resource represents an application / resource / service in the system
 // It is associated with users (and user roles)
 type Resource struct {
 	ID          int64     `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Created     time.Time `json:"created"`
-	CreatedBy   string    `json:"created_by"`
-	Updated     time.Time `json:"updated"`
-	UpdatedBy   string    `json:"updated_by"`
-	Deleted     time.Time `json:"deleted"`
-	DeletedBy   string    `json:"deleted_by"`
+	Name        string    `db:"name" json:"name"`
+	Description string    `db:"description" json:"description"`
+	Created     time.Time `db:"created" json:"created"`
+	CreatedBy   string    `db:"createdby" json:"created_by"`
+	Updated     time.Time `db:"updated" json:"updated"`
+	UpdatedBy   string    `db:"updatedby" json:"updated_by"`
+	Deleted     time.Time `db:"deleted" json:"deleted"`
+	DeletedBy   string    `db:"deletedby" json:"deleted_by"`
 }
 
 // SetResource adds or updates a resource in the system
@@ -43,43 +41,50 @@ func (store SystemDB) SetResource(context User, resource Resource) (Resource, er
 		return retval, fmt.Errorf("An error occurred logging data: %s", err)
 	}
 
-	//	Update the database:
-	err = store.db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte("resources"))
+	//	If the passed resource doesn't have an id, treat it as new and add it:
+	if resource.ID == 0 {
+		tx, err := store.db.Begin()
 		if err != nil {
-			return fmt.Errorf("An error occurred getting the resource bucket: %s", err)
+			return retval, fmt.Errorf("An error occurred starting a transaction for a resource: %s", err)
 		}
 
-		// Generate ID for the resource if we're adding a new one.
-		if resource.ID == 0 {
-			id, err := b.NextSequence()
-			if err != nil {
-				return fmt.Errorf("An error occurred getting a resource id: %s", err)
-			}
-			resource.ID = int64(id)
+		resource.Created = time.Now()
+		resource.CreatedBy = context.Name
+		resource.Updated = time.Now()
+		resource.UpdatedBy = context.Name
+
+		res, err := tx.Exec("INSERT INTO resource (name, description, created, createdby, updated, updatedby) VALUES ($1, $2, $3, $4, $5, $6);", resource.Name, resource.Description, resource.Created, resource.CreatedBy, resource.Updated, resource.UpdatedBy)
+		if err != nil {
+			return retval, fmt.Errorf("An error occurred adding a resource: %s", err)
 		}
 
-		//	Set the current datetime(s) and created/updated by information:
-		if resource.Created.IsZero() {
-			resource.Created = time.Now()
-			resource.CreatedBy = context.Name
+		err = tx.Commit()
+		if err != nil {
+			return retval, fmt.Errorf("An error occurred committing a transaction for a resource: %s", err)
+		}
+
+		resource.ID, _ = res.LastInsertId()
+	} else {
+		//	If it has an id, update it:
+		tx, err := store.db.Begin()
+		if err != nil {
+			return retval, fmt.Errorf("An error occurred starting a transaction for a resource: %s", err)
 		}
 
 		resource.Updated = time.Now()
 		resource.UpdatedBy = context.Name
 
-		//	Serialize to JSON format
-		encoded, err := json.Marshal(resource)
+		_, err = tx.Exec("UPDATE resource set name = $1 description = $2, updated = $3, updatedby = $4 where id = $5;", resource.Name, resource.Description, resource.Updated, resource.UpdatedBy, resource.ID)
 		if err != nil {
-			return err
+			return retval, fmt.Errorf("An error occurred updating a resource: %s", err)
 		}
 
-		//	Store it, with the 'id' as the key:
-		keyName := strconv.FormatInt(resource.ID, 10)
-		return b.Put([]byte(keyName), encoded)
-	})
+		err = tx.Commit()
+		if err != nil {
+			return retval, fmt.Errorf("An error occurred committing a transaction for a resource: %s", err)
+		}
+	}
 
-	//	Set our return value:
 	retval = resource
 
 	fields = map[string]interface{}{
@@ -111,29 +116,6 @@ func (store SystemDB) GetAllResources(context User) ([]Resource, error) {
 	}
 
 	//	Get all the items:
-	err = store.db.View(func(tx *bolt.Tx) error {
-
-		b := tx.Bucket([]byte("resources"))
-		if b == nil {
-			return nil
-		}
-
-		c := b.Cursor()
-
-		for k, v := c.First(); k != nil; k, v = c.Next() {
-
-			//	Unmarshal data into our item
-			item := Resource{}
-			if err := json.Unmarshal(v, &item); err != nil {
-				return fmt.Errorf("An error occurred deserializing all resources: %s", err)
-			}
-
-			//	Add to the return slice:
-			retval = append(retval, item)
-		}
-
-		return nil
-	})
 
 	fields = map[string]interface{}{
 		"context_name": context.Name,

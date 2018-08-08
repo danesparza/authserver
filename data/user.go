@@ -1,12 +1,8 @@
 package data
 
 import (
-	"encoding/json"
 	"fmt"
-	"strconv"
 	"time"
-
-	bolt "github.com/coreos/bbolt"
 )
 
 // User represents a user in the system.  Users
@@ -62,44 +58,48 @@ func (store SystemDB) SetUser(context, user User) (User, error) {
 		return retval, fmt.Errorf("An error occurred logging data: %s", err)
 	}
 
-	//	Update the database:
-	err = store.db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte("users"))
+	//	If the passed user doesn't have an id, treat it as new and add it:
+	if user.ID == 0 {
+		tx, err := store.db.Begin()
 		if err != nil {
-			return fmt.Errorf("An error occurred getting the user bucket: %s", err)
+			return retval, fmt.Errorf("An error occurred starting a transaction for a user: %s", err)
 		}
 
-		// Generate ID for the user if we're adding a new one.
-		if user.ID == 0 {
-			id, err := b.NextSequence()
-			if err != nil {
-				return fmt.Errorf("An error occurred getting a userid: %s", err)
-			}
-			user.ID = int64(id)
+		user.Created = time.Now()
+		user.CreatedBy = context.Name
+		user.Updated = time.Now()
+		user.UpdatedBy = context.Name
+
+		res, err := tx.Exec("INSERT INTO user (enabled, name, description, secrethash, created, createdby, updated, updatedby) VALUES (true, $1, $2, $3, $4, $5, $6, $7);", user.Name, user.Description, user.SecretHash, user.Created, user.CreatedBy, user.Updated, user.UpdatedBy)
+		if err != nil {
+			return retval, fmt.Errorf("An error occurred adding a user: %s", err)
 		}
 
-		//	Set the current datetime(s) and created/updated by information:
-		if user.Created.IsZero() {
-			user.Created = time.Now()
-			user.CreatedBy = context.Name
+		err = tx.Commit()
+		if err != nil {
+			return retval, fmt.Errorf("An error occurred committing a transaction for a user: %s", err)
+		}
+
+		user.ID, _ = res.LastInsertId()
+	} else {
+		//	If it has an id, update it:
+		tx, err := store.db.Begin()
+		if err != nil {
+			return retval, fmt.Errorf("An error occurred starting a transaction for a user: %s", err)
 		}
 
 		user.Updated = time.Now()
 		user.UpdatedBy = context.Name
 
-		//	Serialize to JSON format
-		encoded, err := json.Marshal(user)
+		_, err = tx.Exec("UPDATE user set name = $1 description = $2, secrethash = $3, updated = $4, updatedby = $5 where id = $6;", user.Name, user.Description, user.SecretHash, user.Updated, user.UpdatedBy, user.ID)
 		if err != nil {
-			return err
+			return retval, fmt.Errorf("An error occurred updating a user: %s", err)
 		}
 
-		//	Store it, with the 'id' as the key:
-		keyName := strconv.FormatInt(user.ID, 10)
-		return b.Put([]byte(keyName), encoded)
-	})
-
-	if err != nil {
-		return retval, fmt.Errorf("An error occurred updating user: %s", err)
+		err = tx.Commit()
+		if err != nil {
+			return retval, fmt.Errorf("An error occurred committing a transaction for a user: %s", err)
+		}
 	}
 
 	//	Set our return value:
@@ -134,29 +134,6 @@ func (store SystemDB) GetAllUsers(context User) ([]User, error) {
 	}
 
 	//	Get all the items:
-	err = store.db.View(func(tx *bolt.Tx) error {
-
-		b := tx.Bucket([]byte("users"))
-		if b == nil {
-			return nil
-		}
-
-		c := b.Cursor()
-
-		for k, v := c.First(); k != nil; k, v = c.Next() {
-
-			//	Unmarshal data into our item
-			item := User{}
-			if err := json.Unmarshal(v, &item); err != nil {
-				return fmt.Errorf("An error occurred deserializing all users: %s", err)
-			}
-
-			//	Add to the return slice:
-			retval = append(retval, item)
-		}
-
-		return nil
-	})
 
 	if err != nil {
 		return retval, fmt.Errorf("An error occurred getting all users: %s", err)
@@ -193,31 +170,6 @@ func (store SystemDB) GetUserWithCredentials(name, secret string) (User, string,
 	}
 
 	//	Get all the items:
-	err = store.db.View(func(tx *bolt.Tx) error {
-
-		b := tx.Bucket([]byte("users"))
-		if b == nil {
-			return nil
-		}
-
-		c := b.Cursor()
-
-		for k, v := c.First(); k != nil; k, v = c.Next() {
-
-			//	Unmarshal data into our item
-			item := User{}
-			if err := json.Unmarshal(v, &item); err != nil {
-				return fmt.Errorf("An error occurred deserializing user: %s", err)
-			}
-
-			//	Is this the item we're looking for?
-
-			//	If it is, return it
-			retUser = item
-		}
-
-		return nil
-	})
 
 	if err != nil {
 		return retUser, retToken, fmt.Errorf("An error occurred getting user: %s", err)
@@ -254,33 +206,6 @@ func (store SystemDB) GetUserByID(context User, userID int64) (User, error) {
 	}
 
 	//	Open a read-only view to the data
-	err = store.db.View(func(tx *bolt.Tx) error {
-
-		//	Get our bucket
-		b := tx.Bucket([]byte("users"))
-
-		if b != nil {
-			//	Determine our keyname:
-			keyname := strconv.FormatInt(userID, 10)
-
-			//	Get the data for the key:
-			itemBytes := b.Get([]byte(keyname))
-
-			if len(itemBytes) > 0 {
-
-				//	Unmarshal data into our item
-				if err := json.Unmarshal(itemBytes, &retval); err != nil {
-					return err
-				}
-			}
-		}
-
-		//	Set our return value:
-		return nil
-	})
-	if err != nil {
-		return retval, fmt.Errorf("An error occurred fetching user: %s", err)
-	}
 
 	fields = map[string]interface{}{
 		"context_name": context.Name,

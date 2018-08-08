@@ -1,7 +1,6 @@
 package data_test
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -10,7 +9,7 @@ import (
 
 //	Gets the database path for this environment:
 func getTestFile() string {
-	return fmt.Sprintf("%s/testdatabase.db", os.TempDir())
+	return "testdatabase.db"
 }
 
 func TestRoot_Init_Successful(t *testing.T) {
@@ -26,7 +25,7 @@ func TestRoot_Init_Successful(t *testing.T) {
 	//	No data exists yet!
 
 	//	Act
-	response, secret, err := db.Init()
+	response, secret, err := db.AuthSystemBootstrap()
 
 	//	Assert
 	if err != nil {

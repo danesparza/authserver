@@ -1,12 +1,8 @@
 package data
 
 import (
-	"encoding/json"
 	"fmt"
-	"strconv"
 	"time"
-
-	bolt "github.com/coreos/bbolt"
 )
 
 // Role defines a role or permission that a user is assigned within an
@@ -42,40 +38,6 @@ func (store SystemDB) SetRole(context User, role Role) (Role, error) {
 	}
 
 	//	Update the database:
-	err = store.db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte("roles"))
-		if err != nil {
-			return fmt.Errorf("An error occurred getting the role bucket: %s", err)
-		}
-
-		// Generate ID for the role if we're adding a new one.
-		if role.ID == 0 {
-			id, err := b.NextSequence()
-			if err != nil {
-				return fmt.Errorf("An error occurred getting a role id: %s", err)
-			}
-			role.ID = int64(id)
-		}
-
-		//	Set the current datetime(s) and created/updated by information:
-		if role.Created.IsZero() {
-			role.Created = time.Now()
-			role.CreatedBy = context.Name
-		}
-
-		role.Updated = time.Now()
-		role.UpdatedBy = context.Name
-
-		//	Serialize to JSON format
-		encoded, err := json.Marshal(role)
-		if err != nil {
-			return err
-		}
-
-		//	Store it, with the 'id' as the key:
-		keyName := strconv.FormatInt(role.ID, 10)
-		return b.Put([]byte(keyName), encoded)
-	})
 
 	//	Set our return value:
 	retval = role
@@ -109,29 +71,6 @@ func (store SystemDB) GetAllRoles(context User) ([]Role, error) {
 	}
 
 	//	Get all the items:
-	err = store.db.View(func(tx *bolt.Tx) error {
-
-		b := tx.Bucket([]byte("roles"))
-		if b == nil {
-			return nil
-		}
-
-		c := b.Cursor()
-
-		for k, v := c.First(); k != nil; k, v = c.Next() {
-
-			//	Unmarshal data into our item
-			item := Role{}
-			if err := json.Unmarshal(v, &item); err != nil {
-				return fmt.Errorf("An error occurred deserializing all roles: %s", err)
-			}
-
-			//	Add to the return slice:
-			retval = append(retval, item)
-		}
-
-		return nil
-	})
 
 	fields = map[string]interface{}{
 		"context_name": context.Name,

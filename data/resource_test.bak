@@ -28,7 +28,21 @@ func TestResource_Set_Successful(t *testing.T) {
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Errorf("There was an error closing the database: %s", err)
+		}
+
+		t.Logf("Closed OK")
+	}()
+
+	//	Initialize the database
+	/*
+		_, _, err = db.Init()
+		if err != nil {
+			t.Errorf("Init failed: %s", err)
+		}
+	*/
 
 	//	Our 'context' user (the one performing the action)
 	uctx := data.User{
@@ -71,7 +85,14 @@ func TestResource_GetAllResources_NoItems_NoErrors(t *testing.T) {
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
-	defer db.Close()
+
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Errorf("There was an error closing the database: %s", err)
+		}
+
+		t.Logf("Closed OK")
+	}()
 
 	//	Our 'context' user (the one performing the action)
 	uctx := data.User{
@@ -102,7 +123,14 @@ func TestResource_GetAllResources_ItemsInDB_ReturnsItems(t *testing.T) {
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
-	defer db.Close()
+
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Errorf("There was an error closing the database: %s", err)
+		}
+
+		t.Logf("Closed OK")
+	}()
 
 	//	Our 'context' user (the one performing the action)
 	uctx := data.User{
