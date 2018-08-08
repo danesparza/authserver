@@ -14,8 +14,7 @@ import (
 // They can be created/updated/deleted.  If they are deleted, eventually
 // they will be removed from the system.  The admin user can only be disabled, not deleted
 type User struct {
-	ID          int64       `json:"id"`
-	SysID       string      `db:"sysid" json:"sysid"`
+	ID          string      `db:"id" json:"id"`
 	Enabled     bool        `db:"enabled" json:"enabled"`
 	Name        string      `db:"name" json:"name"`
 	Description string      `db:"description" json:"description"`
@@ -64,7 +63,7 @@ func (store SystemDB) SetUser(context, user User) (User, error) {
 	}
 
 	//	If the passed user doesn't have an id, treat it as new and add it:
-	if user.ID == 0 {
+	if user.ID == "" {
 		tx, err := store.db.Begin()
 		if err != nil {
 			return retval, fmt.Errorf("An error occurred starting a transaction for a user: %s", err)
@@ -75,7 +74,7 @@ func (store SystemDB) SetUser(context, user User) (User, error) {
 		user.Updated = time.Now()
 		user.UpdatedBy = context.Name
 
-		res, err := tx.Exec("INSERT INTO user (enabled, name, description, secrethash, created, createdby, updated, updatedby) VALUES (true, $1, $2, $3, $4, $5, $6, $7);", user.Name, user.Description, user.SecretHash, user.Created, user.CreatedBy, user.Updated, user.UpdatedBy)
+		_, err = tx.Exec("INSERT INTO user (enabled, name, description, secrethash, created, createdby, updated, updatedby) VALUES (true, $1, $2, $3, $4, $5, $6, $7);", user.Name, user.Description, user.SecretHash, user.Created, user.CreatedBy, user.Updated, user.UpdatedBy)
 		if err != nil {
 			return retval, fmt.Errorf("An error occurred adding a user: %s", err)
 		}
@@ -84,8 +83,6 @@ func (store SystemDB) SetUser(context, user User) (User, error) {
 		if err != nil {
 			return retval, fmt.Errorf("An error occurred committing a transaction for a user: %s", err)
 		}
-
-		user.ID, _ = res.LastInsertId()
 	} else {
 		//	If it has an id, update it:
 		tx, err := store.db.Begin()
@@ -96,7 +93,7 @@ func (store SystemDB) SetUser(context, user User) (User, error) {
 		user.Updated = time.Now()
 		user.UpdatedBy = context.Name
 
-		_, err = tx.Exec("UPDATE user set name = $1 description = $2, secrethash = $3, updated = $4, updatedby = $5 where id = $6;", user.Name, user.Description, user.SecretHash, user.Updated, user.UpdatedBy, user.ID)
+		_, err = tx.Exec("UPDATE user set name = $1 description = $2, secrethash = $3, updated = $4, updatedby = $5 where sysid = $6;", user.Name, user.Description, user.SecretHash, user.Updated, user.UpdatedBy, user.ID)
 		if err != nil {
 			return retval, fmt.Errorf("An error occurred updating a user: %s", err)
 		}

@@ -110,6 +110,8 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 	tx.Exec(resourceSchema)
 	tx.Exec(roleSchema)
 	tx.Exec(userSchema)
+	tx.Exec(userIXSysID)
+	tx.Exec(userIXName)
 
 	//	Generate a password
 	adminPassword = xid.New().String()
@@ -121,7 +123,7 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 	}
 
 	//	Add our default admin user - the insert statement requires some parameters be passed:
-	resp, err := tx.Exec(defaultAdmin, adminSysID, string(hashedPassword))
+	_, err = tx.Exec(defaultAdmin, adminID, string(hashedPassword))
 	if err != nil {
 		return adminUser, adminPassword, fmt.Errorf("Problem adding admin user: %s", err)
 	}
@@ -134,17 +136,12 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 		return adminUser, adminPassword, fmt.Errorf("Problem committing a transaction to bootstrap auth system")
 	}
 
-	//	Get the admin id:
-	adminID, _ := resp.LastInsertId()
-
 	//	Get our admin user from the database and create our return object:
 	adminUser = User{}
-	err = store.db.Get(&adminUser, "SELECT * FROM user WHERE sysid=$1;", adminSysID)
+	err = store.db.Get(&adminUser, "SELECT * FROM user WHERE id=$1;", adminID)
 	if err != nil {
 		return adminUser, adminPassword, fmt.Errorf("Problem fetching admin user: %s", err)
 	}
-
-	adminUser.ID = adminID
 
 	/*  For reference.  Remove if no longer needed
 	systemRoles := []Role{

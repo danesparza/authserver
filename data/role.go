@@ -11,8 +11,7 @@ import (
 // Role defines a role or permission that a user is assigned within an
 // application/role/service
 type Role struct {
-	ID          int64       `json:"id"`
-	SysID       string      `json:"sysid"`
+	ID          string      `json:"id"`
 	Name        string      `json:"name"`
 	Description string      `json:"description"`
 	Created     time.Time   `json:"created"`
