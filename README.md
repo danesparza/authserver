@@ -1,5 +1,5 @@
 # authserver [![CircleCI](https://circleci.com/gh/danesparza/authserver.svg?style=shield)](https://circleci.com/gh/danesparza/authserver)
-OAuth 2 based grant issue and validation server.  Batteries included: Uses TLS, and comes with its own UI to manage credentials, resources and roles.  Uses [BoltDB](https://github.com/coreos/bbolt) on the backend.     
+OAuth 2 based grant issue and validation server.  Batteries included: Uses TLS, and comes with its own UI to manage credentials, resources and roles.  Uses [QL](https://github.com/cznic/ql) on the backend.     
 
 Why reimplement OAuth in your app if you don't have to?
 
