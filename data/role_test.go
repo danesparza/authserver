@@ -30,6 +30,12 @@ func TestRole_Set_Successful(t *testing.T) {
 	}
 	defer db.Close()
 
+	//	Bootstrap
+	_, _, err = db.AuthSystemBootstrap()
+	if err != nil {
+		t.Errorf("GetAllResources failed: Should have bootstrapped without error: %s", err)
+	}
+
 	//	Our 'context' user (the one performing the action)
 	uctx := data.User{
 		Name: "Admin",
@@ -42,7 +48,7 @@ func TestRole_Set_Successful(t *testing.T) {
 	}
 
 	//	Act
-	response, err := db.SetRole(uctx, r1)
+	response, err := db.AddRole(uctx, r1)
 
 	//	Assert
 	if err != nil {
@@ -72,6 +78,12 @@ func TestRole_GetAllRoles_NoItems_NoErrors(t *testing.T) {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
 	defer db.Close()
+
+	//	Bootstrap
+	_, _, err = db.AuthSystemBootstrap()
+	if err != nil {
+		t.Errorf("GetAllResources failed: Should have bootstrapped without error: %s", err)
+	}
 
 	//	Our 'context' user (the one performing the action)
 	uctx := data.User{
@@ -104,13 +116,19 @@ func TestRole_GetAllRoles_ItemsInDB_ReturnsItems(t *testing.T) {
 	}
 	defer db.Close()
 
+	//	Bootstrap
+	_, _, err = db.AuthSystemBootstrap()
+	if err != nil {
+		t.Errorf("GetAllResources failed: Should have bootstrapped without error: %s", err)
+	}
+
 	//	Our 'context' user (the one performing the action)
 	uctx := data.User{
 		Name: "Admin",
 	}
 
 	//	Try storing some roles:
-	_, err = db.SetRole(uctx, data.Role{
+	_, err = db.AddRole(uctx, data.Role{
 		Name:        "TestRole1",
 		Description: "Unit test role 1",
 	})
@@ -118,7 +136,7 @@ func TestRole_GetAllRoles_ItemsInDB_ReturnsItems(t *testing.T) {
 		t.Errorf("SetRole 1 failed: Should have created item without error: %s", err)
 	}
 
-	_, err = db.SetRole(uctx, data.Role{
+	_, err = db.AddRole(uctx, data.Role{
 		Name:        "TestRole2",
 		Description: "Unit test role 2",
 	})
@@ -126,7 +144,7 @@ func TestRole_GetAllRoles_ItemsInDB_ReturnsItems(t *testing.T) {
 		t.Errorf("SetRole 2 failed: Should have created item without error: %s", err)
 	}
 
-	_, err = db.SetRole(uctx, data.Role{
+	_, err = db.AddRole(uctx, data.Role{
 		Name:        "TestRole3",
 		Description: "Unit test role 3",
 	})
@@ -134,7 +152,7 @@ func TestRole_GetAllRoles_ItemsInDB_ReturnsItems(t *testing.T) {
 		t.Errorf("SetRole 3 failed: Should have created item without error: %s", err)
 	}
 
-	_, err = db.SetRole(uctx, data.Role{
+	_, err = db.AddRole(uctx, data.Role{
 		Name:        "TestRole4",
 		Description: "Unit test role 4",
 	})

@@ -5,6 +5,9 @@ import (
 	"os"
 	"time"
 
+	// QL sql driver
+	_ "github.com/cznic/ql/driver"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/xid"
 	"golang.org/x/crypto/bcrypt"

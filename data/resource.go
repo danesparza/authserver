@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	_ "github.com/cznic/ql/driver"
 	"github.com/rs/xid"
 	null "gopkg.in/guregu/null.v3"
 	"gopkg.in/guregu/null.v3/zero"
