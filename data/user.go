@@ -86,15 +86,38 @@ func (store SystemDB) AddUser(context User, user User, userPassword string) (Use
 	}
 
 	//	Get the user
-	err = store.db.Get(&retval, "SELECT * FROM user WHERE id=$1;", userID)
+	rows, err := store.db.Query("SELECT id, enabled, name, description, secrethash, created, createdby, updated, updatedby, deleted, deletedby FROM user WHERE id=$1;", userID)
 	if err != nil {
-		return retval, fmt.Errorf("Problem fetching user: %s", err)
+		return retval, fmt.Errorf("Problem selecting user: %s", err)
+	}
+
+	for rows.Next() {
+		if err = rows.Scan(
+			&retval.ID,
+			&retval.Enabled,
+			&retval.Name,
+			&retval.Description,
+			&retval.SecretHash,
+			&retval.Created,
+			&retval.CreatedBy,
+			&retval.Updated,
+			&retval.UpdatedBy,
+			&retval.Deleted,
+			&retval.DeletedBy); err != nil {
+			rows.Close()
+			break
+		}
+	}
+
+	if err = rows.Err(); err != nil {
+		return retval, fmt.Errorf("Problem scanning user: %s", err)
 	}
 
 	//	Return it:
 	return retval, nil
 }
 
+/*
 // GetAllUsers returns an array of all users
 func (store SystemDB) GetAllUsers(context User) ([]User, error) {
 	retval := []User{}
@@ -109,7 +132,6 @@ func (store SystemDB) GetAllUsers(context User) ([]User, error) {
 	return retval, nil
 }
 
-/*
 // GetUserWithCredentials - used for token creation process (to login a user)
 func (store SystemDB) GetUserWithCredentials(name, secret string) (User, string, error) {
 	retUser := User{}

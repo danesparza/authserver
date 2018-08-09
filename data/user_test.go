@@ -7,11 +7,6 @@ import (
 	"github.com/danesparza/authserver/data"
 )
 
-var (
-	db       data.SystemDB
-	filename string
-)
-
 func TestUser_Database_ShouldNotExistYet(t *testing.T) {
 	//	Arrange
 	filename := getTestFile()
@@ -22,10 +17,6 @@ func TestUser_Database_ShouldNotExistYet(t *testing.T) {
 	if _, err := os.Stat(filename); err == nil {
 		t.Errorf("System database file check failed: System file %s already exists, and shouldn't", filename)
 	}
-}
-
-func TestUser_Database_Init(t *testing.T) {
-
 }
 
 func TestUser_AddUser_Successful(t *testing.T) {
@@ -61,16 +52,11 @@ func TestUser_AddUser_Successful(t *testing.T) {
 	userPassword := "newpassword"
 
 	//	Act
-	newID, errAdd := db.AddUser(uctx, u1, userPassword)
-	newUser, errGet := db.GetUserByID(newID)
+	newUser, errAdd := db.AddUser(uctx, u1, userPassword)
 
 	//	Assert
 	if errAdd != nil {
 		t.Errorf("SetUser failed: Should have added an item without error: %s", errAdd)
-	}
-
-	if errGet != nil {
-		t.Errorf("SetUser failed: Should get new item without error: %s", errGet)
 	}
 
 	if newUser.Created.IsZero() || newUser.Updated.IsZero() {

@@ -1,12 +1,12 @@
 package data
 
 import (
+	"database/sql"
 	"fmt"
 
 	// QL sql driver
 	_ "github.com/cznic/ql/driver"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/rs/xid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -14,13 +14,13 @@ import (
 // SystemDB is the BoltDB database for
 // user/application/role storage
 type SystemDB struct {
-	db *sqlx.DB
+	db *sql.DB
 }
 
 // TokenDB is the BoltDB database for
 // token storage
 type TokenDB struct {
-	db *sqlx.DB
+	db *sql.DB
 }
 
 // NewSystemDB creates a new instance of a SystemDB
@@ -28,7 +28,7 @@ func NewSystemDB(dbpath string) (*SystemDB, error) {
 	retval := new(SystemDB)
 
 	//	Create a reference to our bolt db
-	db, err := sqlx.Connect("ql", dbpath)
+	db, err := sql.Open("ql", dbpath)
 	if err != nil {
 		return nil, fmt.Errorf("An error occurred opening the SystemDB: %s", err)
 	}
@@ -86,9 +86,20 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 
 	//	Get our admin user from the database and create our return object:
 	adminUser = User{}
-	err = store.db.Get(&adminUser, "SELECT * FROM user WHERE id=$1;", adminID)
+	err = store.db.QueryRow("SELECT id, enabled, name, description, secrethash, created, createdby, updated, updatedby, deleted, deletedby FROM user WHERE id=$1;", adminID).Scan(
+		&adminUser.ID,
+		&adminUser.Enabled,
+		&adminUser.Name,
+		&adminUser.Description,
+		&adminUser.SecretHash,
+		&adminUser.Created,
+		&adminUser.CreatedBy,
+		&adminUser.Updated,
+		&adminUser.UpdatedBy,
+		&adminUser.Deleted,
+		&adminUser.DeletedBy)
 	if err != nil {
-		return adminUser, adminPassword, fmt.Errorf("Problem fetching admin user: %s", err)
+		return adminUser, adminPassword, fmt.Errorf("Problem selecting admin user: %s", err)
 	}
 
 	/*  For reference.  Remove if no longer needed

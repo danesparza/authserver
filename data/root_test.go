@@ -12,7 +12,7 @@ func getTestFile() string {
 	return "testdatabase.db"
 }
 
-func TestRoot_Init_Successful(t *testing.T) {
+func TestRoot_AuthSystemBootstrap_Successful(t *testing.T) {
 	//	Arrange
 	filename := getTestFile()
 	defer os.Remove(filename)
