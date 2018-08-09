@@ -7,6 +7,11 @@ import (
 	"github.com/danesparza/authserver/data"
 )
 
+var (
+	db       data.SystemDB
+	filename string
+)
+
 func TestUser_Database_ShouldNotExistYet(t *testing.T) {
 	//	Arrange
 	filename := getTestFile()
@@ -19,12 +24,16 @@ func TestUser_Database_ShouldNotExistYet(t *testing.T) {
 	}
 }
 
+func TestUser_Database_Init(t *testing.T) {
+
+}
+
 func TestUser_AddUser_Successful(t *testing.T) {
 	//	Arrange
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename, os.Getenv("UNITTEST_INFLUX_URL"))
+	db, err := data.NewSystemDB(filename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
@@ -52,23 +61,28 @@ func TestUser_AddUser_Successful(t *testing.T) {
 	userPassword := "newpassword"
 
 	//	Act
-	response, err := db.AddUser(uctx, u1, userPassword)
+	newID, errAdd := db.AddUser(uctx, u1, userPassword)
+	newUser, errGet := db.GetUserByID(newID)
 
 	//	Assert
-	if err != nil {
-		t.Errorf("SetUser failed: Should have set an item without error: %s", err)
+	if errAdd != nil {
+		t.Errorf("SetUser failed: Should have added an item without error: %s", errAdd)
 	}
 
-	if response.Created.IsZero() || response.Updated.IsZero() {
-		t.Errorf("SetUser failed: Should have set an item with the correct datetime: %+v", response)
+	if errGet != nil {
+		t.Errorf("SetUser failed: Should get new item without error: %s", errGet)
 	}
 
-	if response.CreatedBy != uctx.Name {
-		t.Errorf("SetUser failed: Should have set an item with the correct 'created by' user: %+v", response)
+	if newUser.Created.IsZero() || newUser.Updated.IsZero() {
+		t.Errorf("SetUser failed: Should have set an item with the correct datetime: %+v", newUser)
 	}
 
-	if response.UpdatedBy != uctx.Name {
-		t.Errorf("SetUser failed: Should have set an item with the correct 'updated by' user: %+v", response)
+	if newUser.CreatedBy != uctx.Name {
+		t.Errorf("SetUser failed: Should have set an item with the correct 'created by' user: %+v", newUser)
+	}
+
+	if newUser.UpdatedBy != uctx.Name {
+		t.Errorf("SetUser failed: Should have set an item with the correct 'updated by' user: %+v", newUser)
 	}
 }
 

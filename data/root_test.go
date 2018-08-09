@@ -17,7 +17,7 @@ func TestRoot_Init_Successful(t *testing.T) {
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename, os.Getenv("UNITTEST_INFLUX_URL"))
+	db, err := data.NewSystemDB(filename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}

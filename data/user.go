@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/rs/xid"
+	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/guregu/null.v3"
 
 	"gopkg.in/guregu/null.v3/zero"
@@ -51,13 +52,10 @@ func (store SystemDB) AddUser(context User, user User, userPassword string) (Use
 	//	Validate:  Does the context user have permission to make the change?
 
 	//	Hash the password
-	hashedPassword := "bonkers"
-	/*
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userPassword), bcrypt.DefaultCost)
-		if err != nil {
-			return retval, fmt.Errorf("Problem hashing user password: %s", err)
-		}
-	*/
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return retval, fmt.Errorf("Problem hashing user password: %s", err)
+	}
 
 	//	Start a transaction:
 	tx, err := store.db.Begin()
@@ -75,7 +73,7 @@ func (store SystemDB) AddUser(context User, user User, userPassword string) (Use
 		userID,
 		user.Name,
 		user.Description,
-		hashedPassword,
+		string(hashedPassword),
 		context.Name)
 	if err != nil {
 		return retval, fmt.Errorf("An error occurred adding a user: %s", err)

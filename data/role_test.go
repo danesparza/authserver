@@ -24,7 +24,7 @@ func TestRole_AddRole_Successful(t *testing.T) {
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename, os.Getenv("UNITTEST_INFLUX_URL"))
+	db, err := data.NewSystemDB(filename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
@@ -73,7 +73,7 @@ func TestRole_GetAllRoles_NoItems_NoErrors(t *testing.T) {
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename, os.Getenv("UNITTEST_INFLUX_URL"))
+	db, err := data.NewSystemDB(filename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
@@ -110,7 +110,7 @@ func TestRole_GetAllRoles_ItemsInDB_ReturnsItems(t *testing.T) {
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename, os.Getenv("UNITTEST_INFLUX_URL"))
+	db, err := data.NewSystemDB(filename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}

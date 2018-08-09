@@ -2,8 +2,6 @@ package data
 
 import (
 	"fmt"
-	"os"
-	"time"
 
 	// QL sql driver
 	_ "github.com/cznic/ql/driver"
@@ -11,16 +9,12 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/xid"
 	"golang.org/x/crypto/bcrypt"
-
-	influxdb "github.com/influxdata/influxdb/client/v2"
 )
 
 // SystemDB is the BoltDB database for
 // user/application/role storage
 type SystemDB struct {
-	db       *sqlx.DB
-	ic       influxdb.Client
-	hostname string
+	db *sqlx.DB
 }
 
 // TokenDB is the BoltDB database for
@@ -30,7 +24,7 @@ type TokenDB struct {
 }
 
 // NewSystemDB creates a new instance of a SystemDB
-func NewSystemDB(dbpath, influxurl string) (*SystemDB, error) {
+func NewSystemDB(dbpath string) (*SystemDB, error) {
 	retval := new(SystemDB)
 
 	//	Create a reference to our bolt db
@@ -40,24 +34,6 @@ func NewSystemDB(dbpath, influxurl string) (*SystemDB, error) {
 	}
 	retval.db = db
 
-	//	Get the hostname
-	hostname, err := os.Hostname()
-	if err != nil {
-		return nil, fmt.Errorf("An error occurred getting the hostname: %s", err)
-	}
-	retval.hostname = hostname
-
-	//	If we have an influxurl, use it to spin up a client:
-	if influxurl != "" {
-		ic, err := influxdb.NewHTTPClient(influxdb.HTTPConfig{Addr: influxurl})
-		if err != nil {
-			return nil, fmt.Errorf("An error occurred creating the InfluxDB client: %s", err)
-		}
-
-		//	Include the influxDB client
-		retval.ic = ic
-	}
-
 	//	Return our systemdb reference
 	return retval, nil
 }
@@ -65,37 +41,6 @@ func NewSystemDB(dbpath, influxurl string) (*SystemDB, error) {
 // Close closes the SystemDB database
 func (store SystemDB) Close() error {
 	return store.db.Close()
-}
-
-// Log sends data to influx
-func (store SystemDB) Log(measurement, event string, fields map[string]interface{}) error {
-
-	//	If we appear to have an influxdb client...
-	if store.ic != nil {
-		bp, err := influxdb.NewBatchPoints(influxdb.BatchPointsConfig{
-			Database: "authserver",
-		})
-		if err != nil {
-			return fmt.Errorf("An error occurred creating influx batch points: %s", err)
-		}
-
-		//	Create our tags
-		tags := map[string]string{"host": store.hostname, "event": event}
-
-		// Create a point and add to batch
-		pt, err := influxdb.NewPoint(measurement, tags, fields, time.Now())
-		if err != nil {
-			return fmt.Errorf("Problem creating a new Influx point: %s", err)
-		}
-		bp.AddPoint(pt)
-
-		// Write the batch
-		if err := store.ic.Write(bp); err != nil {
-			return fmt.Errorf("Problem writing to InfluxDB server: %s", err)
-		}
-	}
-
-	return nil
 }
 
 // AuthSystemBootstrap initializes the SystemDB and creates any default admin users / roles / resources
