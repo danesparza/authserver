@@ -52,20 +52,68 @@ func TestRole_AddRole_Successful(t *testing.T) {
 
 	//	Assert
 	if err != nil {
-		t.Errorf("SetRole failed: Should have set an item without error: %s", err)
+		t.Errorf("AddRole failed: Should have added an item without error: %s", err)
 	}
 
 	if response.Created.IsZero() || response.Updated.IsZero() {
-		t.Errorf("SetRole failed: Should have set an item with the correct datetime: %+v", response)
+		t.Errorf("AddRole failed: Should have added an item with the correct datetime: %+v", response)
 	}
 
 	if response.CreatedBy != uctx.Name {
-		t.Errorf("SetRole failed: Should have set an item with the correct 'created by' user: %+v", response)
+		t.Errorf("AddRole failed: Should have added an item with the correct 'created by' user: %+v", response)
 	}
 
 	if response.UpdatedBy != uctx.Name {
-		t.Errorf("SetRole failed: Should have set an item with the correct 'updated by' user: %+v", response)
+		t.Errorf("AddRole failed: Should have added an item with the correct 'updated by' user: %+v", response)
 	}
+}
+
+func TestRole_AddDuplicateRole_Successful(t *testing.T) {
+	//	Arrange
+	filename := getTestFile()
+	defer os.Remove(filename)
+
+	db, err := data.NewSystemDB(filename)
+	if err != nil {
+		t.Errorf("NewSystemDB failed: %s", err)
+	}
+	defer db.Close()
+
+	//	Bootstrap
+	_, _, err = db.AuthSystemBootstrap()
+	if err != nil {
+		t.Errorf("AuthSystemBootstrap failed: Should have bootstrapped without error: %s", err)
+	}
+
+	//	Our 'context' user (the one performing the action)
+	uctx := data.User{
+		Name: "Admin",
+	}
+
+	//	Create new resource:
+	r1 := data.Role{
+		Name:        "TestRole",
+		Description: "Unit test role",
+	}
+
+	r2 := data.Role{
+		Name:        "TestRole",
+		Description: "Unit test role (duplicate)",
+	}
+
+	//	Act
+	_, err1 := db.AddRole(uctx, r1)
+	_, err2 := db.AddRole(uctx, r2)
+
+	//	Assert
+	if err1 != nil {
+		t.Errorf("AddRole failed: Should have added an item without error: %s", err)
+	}
+
+	if err2 != nil {
+		t.Errorf("AddRole failed: Should have added a duplicate item without error: %s", err)
+	}
+
 }
 
 func TestRole_GetAllRoles_NoItems_NoErrors(t *testing.T) {
@@ -133,7 +181,7 @@ func TestRole_GetAllRoles_ItemsInDB_ReturnsItems(t *testing.T) {
 		Description: "Unit test role 1",
 	})
 	if err != nil {
-		t.Errorf("SetRole 1 failed: Should have created item without error: %s", err)
+		t.Errorf("AddRole 1 failed: Should have created item without error: %s", err)
 	}
 
 	_, err = db.AddRole(uctx, data.Role{
@@ -141,7 +189,7 @@ func TestRole_GetAllRoles_ItemsInDB_ReturnsItems(t *testing.T) {
 		Description: "Unit test role 2",
 	})
 	if err != nil {
-		t.Errorf("SetRole 2 failed: Should have created item without error: %s", err)
+		t.Errorf("AddRole 2 failed: Should have created item without error: %s", err)
 	}
 
 	_, err = db.AddRole(uctx, data.Role{
@@ -149,7 +197,7 @@ func TestRole_GetAllRoles_ItemsInDB_ReturnsItems(t *testing.T) {
 		Description: "Unit test role 3",
 	})
 	if err != nil {
-		t.Errorf("SetRole 3 failed: Should have created item without error: %s", err)
+		t.Errorf("AddRole 3 failed: Should have created item without error: %s", err)
 	}
 
 	_, err = db.AddRole(uctx, data.Role{
@@ -157,7 +205,7 @@ func TestRole_GetAllRoles_ItemsInDB_ReturnsItems(t *testing.T) {
 		Description: "Unit test role 4",
 	})
 	if err != nil {
-		t.Errorf("SetRole 4 failed: Should have created item without error: %s", err)
+		t.Errorf("AddRole 4 failed: Should have created item without error: %s", err)
 	}
 
 	//	Act

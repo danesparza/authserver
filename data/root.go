@@ -83,11 +83,6 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 		tx.Rollback()
 		return adminUser, adminPassword, fmt.Errorf("Problem adding role id index: %s", err)
 	}
-	_, err = tx.Exec(roleIXName)
-	if err != nil {
-		tx.Rollback()
-		return adminUser, adminPassword, fmt.Errorf("Problem adding role name index: %s", err)
-	}
 
 	//	User schema / indices
 	_, err = tx.Exec(userSchema)

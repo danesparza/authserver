@@ -53,9 +53,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS UserName ON user (name)`
 var roleIXSysID = `
 CREATE UNIQUE INDEX IF NOT EXISTS RoleID ON role (id)`
 
-var roleIXName = `
-CREATE UNIQUE INDEX IF NOT EXISTS RoleName ON role (name)`
-
 var resourceIXSysID = `
 CREATE UNIQUE INDEX IF NOT EXISTS ResourceID ON resource (id)`
 
