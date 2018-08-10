@@ -59,7 +59,17 @@ func (store SystemDB) AddRole(context User, role Role) (Role, error) {
 	}
 
 	//	Get the role
-	err = store.db.Get(&retval, "SELECT * FROM role WHERE id=$1;", roleID)
+	err = store.db.QueryRow(`select id, name, description, created, createdby, updated, updatedby, deleted, deletedby from role WHERE id=$1;`, roleID).Scan(
+		&retval.ID,
+		&retval.Name,
+		&retval.Description,
+		&retval.Created,
+		&retval.CreatedBy,
+		&retval.Updated,
+		&retval.UpdatedBy,
+		&retval.Deleted,
+		&retval.DeletedBy,
+	)
 	if err != nil {
 		return retval, fmt.Errorf("Problem fetching role: %s", err)
 	}
@@ -73,9 +83,33 @@ func (store SystemDB) GetAllRoles(context User) ([]Role, error) {
 	retval := []Role{}
 
 	//	Get all the items:
-	err := store.db.Select(&retval, "select * from role")
+	rows, err := store.db.Query("select id, name, description, created, createdby, updated, updatedby, deleted, deletedby from role")
 	if err != nil {
-		return retval, fmt.Errorf("Problem fetching all roles: %s", err)
+		return retval, fmt.Errorf("Problem selecting all roles: %s", err)
+	}
+
+	for rows.Next() {
+		item := Role{}
+
+		if err = rows.Scan(
+			&item.ID,
+			&item.Name,
+			&item.Description,
+			&item.Created,
+			&item.CreatedBy,
+			&item.Updated,
+			&item.UpdatedBy,
+			&item.Deleted,
+			&item.DeletedBy); err != nil {
+			rows.Close()
+			break
+		}
+
+		retval = append(retval, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		return retval, fmt.Errorf("Problem scanning all users: %s", err)
 	}
 
 	//	Return our slice:

@@ -54,11 +54,14 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 		return adminUser, adminPassword, fmt.Errorf("Problem starting a transaction to bootstrap auth system")
 	}
 
-	//	Create our database schema
+	//	Create our database schema and indices
 	tx.Exec(resourceSchema)
-	tx.Exec(roleSchema)
-	tx.Exec(userSchema)
 
+	tx.Exec(roleSchema)
+	tx.Exec(roleIXSysID)
+	tx.Exec(roleIXName)
+
+	tx.Exec(userSchema)
 	tx.Exec(userIXSysID)
 	tx.Exec(userIXName)
 
