@@ -119,3 +119,15 @@ var defaultSystemCredentials = `
 		user_resource_role(userid, resourceid, roleid, created, createdby, updated, updatedby)
 		values($1, $2, $3, now(), "system", now(), "system")
 `
+
+// getResourcesForUser is the query to get all resources for a given user.  It requires 1 parameter:
+// - the id of the user to check
+var getResourcesForUser = `
+select 
+	distinct resource.id, resource.name, resource.description 
+from 
+	resource, user_resource_role 
+where 
+	resource.id = user_resource_role.resourceid 
+	and user_resource_role.userid = $1
+`
