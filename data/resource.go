@@ -12,15 +12,15 @@ import (
 // Resource represents an application / resource / service in the system
 // It is associated with users (and user roles)
 type Resource struct {
-	ID          string      `db:"id" json:"id"`
-	Name        string      `db:"name" json:"name"`
-	Description string      `db:"description" json:"description"`
-	Created     time.Time   `db:"created" json:"created"`
-	CreatedBy   string      `db:"createdby" json:"created_by"`
-	Updated     time.Time   `db:"updated" json:"updated"`
-	UpdatedBy   string      `db:"updatedby" json:"updated_by"`
-	Deleted     zero.Time   `db:"deleted" json:"deleted"`
-	DeletedBy   null.String `db:"deletedby" json:"deleted_by"`
+	ID          string      `json:"id"`
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	Created     time.Time   `json:"created"`
+	CreatedBy   string      `json:"created_by"`
+	Updated     time.Time   `json:"updated"`
+	UpdatedBy   string      `json:"updated_by"`
+	Deleted     zero.Time   `json:"deleted"`
+	DeletedBy   null.String `json:"deleted_by"`
 }
 
 // AddResource adds a resource to the system

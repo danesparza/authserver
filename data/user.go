@@ -16,26 +16,26 @@ import (
 // They can be created/updated/deleted.  If they are deleted, eventually
 // they will be removed from the system.  The admin user can only be disabled, not deleted
 type User struct {
-	ID          string      `db:"id" json:"id"`
-	Enabled     bool        `db:"enabled" json:"enabled"`
-	Name        string      `db:"name" json:"name"`
-	Description string      `db:"description" json:"description"`
-	SecretHash  string      `db:"secrethash" json:"secrethash"`
-	Created     time.Time   `db:"created" json:"created"`
-	CreatedBy   string      `db:"createdby" json:"created_by"`
-	Updated     time.Time   `db:"updated" json:"updated"`
-	UpdatedBy   string      `db:"updatedby" json:"updated_by"`
-	Deleted     zero.Time   `db:"deleted" json:"deleted"`
-	DeletedBy   null.String `db:"deletedby" json:"deleted_by"`
+	ID          string      `json:"id"`
+	Enabled     bool        `json:"enabled"`
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	SecretHash  string      `json:"secrethash"`
+	Created     time.Time   `json:"created"`
+	CreatedBy   string      `json:"created_by"`
+	Updated     time.Time   `json:"updated"`
+	UpdatedBy   string      `json:"updated_by"`
+	Deleted     zero.Time   `json:"deleted"`
+	DeletedBy   null.String `json:"deleted_by"`
 }
 
 // UserResourceRole defines a relationship between a user,
 // a resource (application/service), and the roles that user has
 // been assigned within the resource (application/service)
 type UserResourceRole struct {
-	UserID     int64     `json:"userid"`
-	ResourceID int64     `json:"resourceid"`
-	RoleID     int64     `json:"roleid"`
+	UserID     string    `json:"userid"`
+	ResourceID string    `json:"resourceid"`
+	RoleID     string    `json:"roleid"`
 	Created    time.Time `json:"created"`
 	CreatedBy  string    `json:"created_by"`
 	Updated    time.Time `json:"updated"`

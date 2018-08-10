@@ -148,8 +148,8 @@ func TestRole_GetAllRoles_NoItems_NoErrors(t *testing.T) {
 		t.Errorf("GetAllRoles failed: Should have gotten all items without error: %s", err)
 	}
 
-	if len(response) != 0 {
-		t.Errorf("GetAllRoles failed: Should not have gotten any items")
+	if len(response) != 2 { // Bootstrap adds two system roles
+		t.Errorf("GetAllRoles failed: Should have fetched 2 items but got: %v", len(response))
 	}
 }
 
@@ -216,7 +216,7 @@ func TestRole_GetAllRoles_ItemsInDB_ReturnsItems(t *testing.T) {
 		t.Errorf("GetAllRoles failed: Should have gotten the items without error: %s", err)
 	}
 
-	if len(response) != 4 {
-		t.Errorf("GetAllRoles failed: Should have gotten all items")
+	if len(response) != 6 { // Bootstrap adds 2 system roles
+		t.Errorf("GetAllRoles failed: Should have fetched all items but got: %v", len(response))
 	}
 }

@@ -98,8 +98,8 @@ func TestResource_GetAllResources_NoItems_NoErrors(t *testing.T) {
 		t.Errorf("GetAllResources failed: Should have gotten all items without error: %s", err)
 	}
 
-	if len(response) != 0 {
-		t.Errorf("GetAllResources failed: Should not have gotten any items")
+	if len(response) != 1 { // Bootstrap adds a system resource
+		t.Errorf("GetAllResources failed: Should have only fetched the default resource")
 	}
 }
 
@@ -150,7 +150,7 @@ func TestResource_GetAllResources_ItemsInDB_ReturnsItems(t *testing.T) {
 		t.Errorf("GetAllResources failed: Should have gotten the items without error: %s", err)
 	}
 
-	if len(response) != 2 {
-		t.Errorf("GetAllResources failed: Should have gotten all items")
+	if len(response) != 3 { // Bootstrap adds a system resource
+		t.Errorf("GetAllResources failed: Should have gotten all items.  Instead, got: %v", len(response))
 	}
 }

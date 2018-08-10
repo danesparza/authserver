@@ -101,6 +101,18 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 		return adminUser, adminPassword, fmt.Errorf("Problem adding user name index: %s", err)
 	}
 
+	//	UserResourceRole schema / indices
+	_, err = tx.Exec(userResourceRoleSchema)
+	if err != nil {
+		tx.Rollback()
+		return adminUser, adminPassword, fmt.Errorf("Problem adding user_resource_role schema: %s", err)
+	}
+	_, err = tx.Exec(userResourceRoleIXID)
+	if err != nil {
+		tx.Rollback()
+		return adminUser, adminPassword, fmt.Errorf("Problem adding user_resource_role id index: %s", err)
+	}
+
 	//	Generate a password for the admin user
 	adminPassword = xid.New().String()
 
@@ -111,13 +123,31 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 	}
 
 	//	Add our default admin user - the insert statement requires some parameters be passed:
-	_, err = tx.Exec(defaultAdmin, adminID, string(hashedPassword))
+	_, err = tx.Exec(defaultAdminUser, adminID, string(hashedPassword))
 	if err != nil {
 		tx.Rollback()
 		return adminUser, adminPassword, fmt.Errorf("Problem adding admin user: %s", err)
 	}
 
-	//	Create the default system roles and resources:
+	//	Create the default system resources:
+	_, err = tx.Exec(defaultSystemResource, systemResourceID)
+	if err != nil {
+		tx.Rollback()
+		return adminUser, adminPassword, fmt.Errorf("Problem adding system resource: %s", err)
+	}
+
+	//	Create the default system roles:
+	_, err = tx.Exec(defaultSystemRole, systemAdminRoleID, "sys_admin", "System admin role")
+	if err != nil {
+		tx.Rollback()
+		return adminUser, adminPassword, fmt.Errorf("Problem adding system role: %s", err)
+	}
+
+	_, err = tx.Exec(defaultSystemRole, systemDelegateRoleID, "sys_delegate", "Resource delegate role")
+	if err != nil {
+		tx.Rollback()
+		return adminUser, adminPassword, fmt.Errorf("Problem adding system role: %s", err)
+	}
 
 	//	Commit our transaction
 	err = tx.Commit()
