@@ -59,7 +59,17 @@ func (store SystemDB) AddResource(context User, resource Resource) (Resource, er
 	}
 
 	//	Get the resource
-	err = store.db.Get(&retval, "SELECT * FROM resource WHERE id=$1;", resourceID)
+	err = store.db.QueryRow(`SELECT id, name, description, created, createdby, updated, updatedby, deleted, deletedby FROM resource WHERE id=$1;`, resourceID).Scan(
+		&retval.ID,
+		&retval.Name,
+		&retval.Description,
+		&retval.Created,
+		&retval.CreatedBy,
+		&retval.Updated,
+		&retval.UpdatedBy,
+		&retval.Deleted,
+		&retval.DeletedBy,
+	)
 	if err != nil {
 		return retval, fmt.Errorf("Problem fetching resource: %s", err)
 	}
@@ -73,9 +83,33 @@ func (store SystemDB) GetAllResources(context User) ([]Resource, error) {
 	retval := []Resource{}
 
 	//	Get all the items:
-	err := store.db.Select(&retval, "select * from resource")
+	rows, err := store.db.Query("select * from resource")
 	if err != nil {
-		return retval, fmt.Errorf("Problem fetching all resources: %s", err)
+		return retval, fmt.Errorf("Problem selecting all resources: %s", err)
+	}
+
+	for rows.Next() {
+		item := Resource{}
+
+		if err = rows.Scan(
+			&item.ID,
+			&item.Name,
+			&item.Description,
+			&item.Created,
+			&item.CreatedBy,
+			&item.Updated,
+			&item.UpdatedBy,
+			&item.Deleted,
+			&item.DeletedBy); err != nil {
+			rows.Close()
+			break
+		}
+
+		retval = append(retval, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		return retval, fmt.Errorf("Problem scanning all resources: %s", err)
 	}
 
 	//	Return our slice:

@@ -56,6 +56,8 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 
 	//	Create our database schema and indices
 	tx.Exec(resourceSchema)
+	tx.Exec(resourceIXSysID)
+	tx.Exec(resourceIXName)
 
 	tx.Exec(roleSchema)
 	tx.Exec(roleIXSysID)

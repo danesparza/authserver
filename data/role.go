@@ -109,7 +109,7 @@ func (store SystemDB) GetAllRoles(context User) ([]Role, error) {
 	}
 
 	if err = rows.Err(); err != nil {
-		return retval, fmt.Errorf("Problem scanning all users: %s", err)
+		return retval, fmt.Errorf("Problem scanning all roles: %s", err)
 	}
 
 	//	Return our slice:

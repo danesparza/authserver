@@ -56,6 +56,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS RoleID ON role (id)`
 var roleIXName = `
 CREATE UNIQUE INDEX IF NOT EXISTS RoleName ON role (name)`
 
+var resourceIXSysID = `
+CREATE UNIQUE INDEX IF NOT EXISTS ResourceID ON resource (id)`
+
+var resourceIXName = `
+CREATE UNIQUE INDEX IF NOT EXISTS ResourceName ON resource (name)`
+
 // adminID is the id of the default admin user
 var adminID = "bdldpjad2pm0cd64ra80"
 
