@@ -173,18 +173,5 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 		return adminUser, adminPassword, fmt.Errorf("Problem selecting admin user: %s", err)
 	}
 
-	/*  For reference.  Remove if no longer needed
-	systemRoles := []Role{
-		{Name: "admin", Description: "Admin role:  Can create/edit/delete all users/resources/roles"},
-		{Name: "editor", Description: "Editor role:  Can assign users/resources/roles"},
-		{Name: "reader", Description: "Reader role:  Can view users/resources/roles"},
-	}
-
-	systemResources := []Resource{
-		{Name: "authserver", Description: "Authserver resource:  Defines authserver system access"},
-	}
-
-	*/
-
 	return adminUser, adminPassword, nil
 }
