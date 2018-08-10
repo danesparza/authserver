@@ -58,6 +58,7 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 	tx.Exec(resourceSchema)
 	tx.Exec(roleSchema)
 	tx.Exec(userSchema)
+
 	tx.Exec(userIXSysID)
 	tx.Exec(userIXName)
 

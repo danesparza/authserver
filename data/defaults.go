@@ -45,10 +45,16 @@ CREATE TABLE IF NOT EXISTS user (
 );`
 
 var userIXSysID = `
-CREATE INDEX CREATE UNIQUE INDEX IF NOT EXISTS UserID ON user (id)`
+CREATE UNIQUE INDEX IF NOT EXISTS UserID ON user (id)`
 
 var userIXName = `
-CREATE INDEX CREATE UNIQUE INDEX IF NOT EXISTS UserName ON user (name)`
+CREATE UNIQUE INDEX IF NOT EXISTS UserName ON user (name)`
+
+var roleIXSysID = `
+CREATE UNIQUE INDEX IF NOT EXISTS RoleID ON role (id)`
+
+var roleIXName = `
+CREATE UNIQUE INDEX IF NOT EXISTS RoleName ON role (name)`
 
 // adminID is the id of the default admin user
 var adminID = "bdldpjad2pm0cd64ra80"

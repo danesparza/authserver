@@ -57,14 +57,14 @@ func (store SystemDB) AddUser(context User, user User, userPassword string) (Use
 		return retval, fmt.Errorf("Problem hashing user password: %s", err)
 	}
 
+	//	Generate an id:
+	userID := xid.New().String()
+
 	//	Start a transaction:
 	tx, err := store.db.Begin()
 	if err != nil {
 		return retval, fmt.Errorf("An error occurred starting a transaction for a user: %s", err)
 	}
-
-	//	Generate an id:
-	userID := xid.New().String()
 
 	//	Insert the item
 	_, err = tx.Exec(`INSERT INTO 
@@ -86,31 +86,21 @@ func (store SystemDB) AddUser(context User, user User, userPassword string) (Use
 	}
 
 	//	Get the user
-	rows, err := store.db.Query("SELECT id, enabled, name, description, secrethash, created, createdby, updated, updatedby, deleted, deletedby FROM user WHERE id=$1;", userID)
+	err = store.db.QueryRow("SELECT id, enabled, name, description, secrethash, created, createdby, updated, updatedby, deleted, deletedby FROM user WHERE id=$1;", userID).Scan(
+		&retval.ID,
+		&retval.Enabled,
+		&retval.Name,
+		&retval.Description,
+		&retval.SecretHash,
+		&retval.Created,
+		&retval.CreatedBy,
+		&retval.Updated,
+		&retval.UpdatedBy,
+		&retval.Deleted,
+		&retval.DeletedBy,
+	)
 	if err != nil {
 		return retval, fmt.Errorf("Problem selecting user: %s", err)
-	}
-
-	for rows.Next() {
-		if err = rows.Scan(
-			&retval.ID,
-			&retval.Enabled,
-			&retval.Name,
-			&retval.Description,
-			&retval.SecretHash,
-			&retval.Created,
-			&retval.CreatedBy,
-			&retval.Updated,
-			&retval.UpdatedBy,
-			&retval.Deleted,
-			&retval.DeletedBy); err != nil {
-			rows.Close()
-			break
-		}
-	}
-
-	if err = rows.Err(); err != nil {
-		return retval, fmt.Errorf("Problem scanning user: %s", err)
 	}
 
 	//	Return it:
