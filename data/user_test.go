@@ -56,20 +56,74 @@ func TestUser_AddUser_Successful(t *testing.T) {
 
 	//	Assert
 	if errAdd != nil {
-		t.Errorf("SetUser failed: Should have added an item without error: %s", errAdd)
+		t.Errorf("AddUser failed: Should have added an item without error: %s", errAdd)
 	}
 
 	if newUser.Created.IsZero() || newUser.Updated.IsZero() {
-		t.Errorf("SetUser failed: Should have set an item with the correct datetime: %+v", newUser)
+		t.Errorf("AddUser failed: Should have set an item with the correct datetime: %+v", newUser)
 	}
 
 	if newUser.CreatedBy != uctx.Name {
-		t.Errorf("SetUser failed: Should have set an item with the correct 'created by' user: %+v", newUser)
+		t.Errorf("AddUser failed: Should have set an item with the correct 'created by' user: %+v", newUser)
 	}
 
 	if newUser.UpdatedBy != uctx.Name {
-		t.Errorf("SetUser failed: Should have set an item with the correct 'updated by' user: %+v", newUser)
+		t.Errorf("AddUser failed: Should have set an item with the correct 'updated by' user: %+v", newUser)
 	}
+}
+
+func TestUser_AddDuplicateUser_ReturnsError(t *testing.T) {
+	//	Arrange
+	filename := getTestFile()
+	defer os.Remove(filename)
+
+	db, err := data.NewSystemDB(filename)
+	if err != nil {
+		t.Errorf("NewSystemDB failed: %s", err)
+	}
+	defer db.Close()
+
+	//	Bootstrap
+	_, _, err = db.AuthSystemBootstrap()
+	if err != nil {
+		t.Errorf("AuthSystemBootstrap failed: Should have bootstrapped without error: %s", err)
+	}
+
+	//	Our 'context' user (the one performing the action)
+	uctx := data.User{
+		Name: "Admin",
+	}
+
+	//	Create new user:
+	u1 := data.User{
+		Name:        "TestUser1",
+		SecretHash:  "SomeRandomSecret",
+		Description: "Unit test user",
+	}
+
+	//	Create duplicate user:
+	u2 := data.User{
+		Name:        "TestUser1",
+		SecretHash:  "SomeRandomSecret",
+		Description: "Unit test duplicate user",
+	}
+
+	//	Our new password:
+	userPassword := "newpassword"
+
+	//	Act
+	_, errAdd := db.AddUser(uctx, u1, userPassword)
+	_, errAdd2 := db.AddUser(uctx, u2, userPassword)
+
+	//	Assert
+	if errAdd != nil {
+		t.Errorf("AddUser failed: Should have added an item without error: %s", errAdd)
+	}
+
+	if errAdd2 == nil {
+		t.Errorf("AddUser failed: Should have returned error (duplicate user name), but didn't")
+	}
+
 }
 
 func TestUser_GetAllUsers_NoItems_NoErrors(t *testing.T) {
@@ -141,7 +195,7 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 		Description: "Unit test user 1",
 	}, userPassword)
 	if err != nil {
-		t.Errorf("SetUser 1 failed: Should have created users without error: %s", err)
+		t.Errorf("AddUser 1 failed: Should have created users without error: %s", err)
 	}
 
 	_, err = db.AddUser(uctx, data.User{
@@ -150,7 +204,7 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 		Description: "Unit test user 2",
 	}, userPassword)
 	if err != nil {
-		t.Errorf("SetUser 2 failed: Should have created users without error: %s", err)
+		t.Errorf("AddUser 2 failed: Should have created users without error: %s", err)
 	}
 
 	_, err = db.AddUser(uctx, data.User{
@@ -159,7 +213,7 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 		Description: "Unit test user 3",
 	}, userPassword)
 	if err != nil {
-		t.Errorf("SetUser 3 failed: Should have created users without error: %s", err)
+		t.Errorf("AddUser 3 failed: Should have created users without error: %s", err)
 	}
 
 	//	Act

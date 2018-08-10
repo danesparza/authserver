@@ -76,6 +76,7 @@ func (store SystemDB) AddUser(context User, user User, userPassword string) (Use
 		string(hashedPassword),
 		context.Name)
 	if err != nil {
+		tx.Rollback()
 		return retval, fmt.Errorf("An error occurred adding a user: %s", err)
 	}
 

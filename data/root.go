@@ -55,19 +55,58 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 	}
 
 	//	Create our database schema and indices
-	tx.Exec(resourceSchema)
-	tx.Exec(resourceIXSysID)
-	tx.Exec(resourceIXName)
+	//	Resource schema / indices
+	_, err = tx.Exec(resourceSchema)
+	if err != nil {
+		tx.Rollback()
+		return adminUser, adminPassword, fmt.Errorf("Problem adding resource schema: %s", err)
+	}
+	_, err = tx.Exec(resourceIXSysID)
+	if err != nil {
+		tx.Rollback()
+		return adminUser, adminPassword, fmt.Errorf("Problem adding resource id index: %s", err)
+	}
+	_, err = tx.Exec(resourceIXName)
+	if err != nil {
+		tx.Rollback()
+		return adminUser, adminPassword, fmt.Errorf("Problem adding resource name index: %s", err)
+	}
 
-	tx.Exec(roleSchema)
-	tx.Exec(roleIXSysID)
-	tx.Exec(roleIXName)
+	//	Role schema / indices
+	_, err = tx.Exec(roleSchema)
+	if err != nil {
+		tx.Rollback()
+		return adminUser, adminPassword, fmt.Errorf("Problem adding role schema: %s", err)
+	}
+	_, err = tx.Exec(roleIXSysID)
+	if err != nil {
+		tx.Rollback()
+		return adminUser, adminPassword, fmt.Errorf("Problem adding role id index: %s", err)
+	}
+	_, err = tx.Exec(roleIXName)
+	if err != nil {
+		tx.Rollback()
+		return adminUser, adminPassword, fmt.Errorf("Problem adding role name index: %s", err)
+	}
 
-	tx.Exec(userSchema)
-	tx.Exec(userIXSysID)
-	tx.Exec(userIXName)
+	//	User schema / indices
+	_, err = tx.Exec(userSchema)
+	if err != nil {
+		tx.Rollback()
+		return adminUser, adminPassword, fmt.Errorf("Problem adding user schema: %s", err)
+	}
+	_, err = tx.Exec(userIXSysID)
+	if err != nil {
+		tx.Rollback()
+		return adminUser, adminPassword, fmt.Errorf("Problem adding user id index: %s", err)
+	}
+	_, err = tx.Exec(userIXName)
+	if err != nil {
+		tx.Rollback()
+		return adminUser, adminPassword, fmt.Errorf("Problem adding user name index: %s", err)
+	}
 
-	//	Generate a password
+	//	Generate a password for the admin user
 	adminPassword = xid.New().String()
 
 	//	Hash the password
@@ -79,6 +118,7 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 	//	Add our default admin user - the insert statement requires some parameters be passed:
 	_, err = tx.Exec(defaultAdmin, adminID, string(hashedPassword))
 	if err != nil {
+		tx.Rollback()
 		return adminUser, adminPassword, fmt.Errorf("Problem adding admin user: %s", err)
 	}
 
