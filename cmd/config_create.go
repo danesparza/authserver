@@ -17,8 +17,8 @@ apiservice:
   tlscert: cert.pem
   tlskey: key.pem
 datastore:
-  type: boltdb
-  database: config.db
+  system: system.db
+  tokens: tokens.db
 `)
 
 // configcreateCmd represents the configcreate command

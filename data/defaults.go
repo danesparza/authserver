@@ -109,3 +109,13 @@ var defaultSystemRole = `
 	INSERT INTO 
 		role(id, name, description, created, createdby, updated, updatedby) 
 		values($1, $2, $3, now(), "system", now(), "system");`
+
+// defaultSystemCredentials is the insert statement that creates the default system credentials - it requires 3 parameters:
+// - the id of the admin user
+// - the id of the system resource
+// - the id of the system role
+var defaultSystemCredentials = `
+	INSERT INTO
+		user_resource_role(userid, resourceid, roleid, created, createdby, updated, updatedby)
+		values($1, $2, $3, now(), "system", now(), "system")
+`

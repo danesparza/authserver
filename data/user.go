@@ -44,6 +44,15 @@ type UserResourceRole struct {
 	DeletedBy  string    `json:"deleted_by"`
 }
 
+// GrantUser is a hierarchy of a user and the resource and role
+// grants they have been assigned
+type GrantUser struct {
+	ID             string
+	Name           string
+	Description    string
+	GrantResources []GrantResource
+}
+
 // AddUser adds a user to the system
 func (store SystemDB) AddUser(context User, user User, userPassword string) (User, error) {
 	//	Our return item
@@ -174,4 +183,24 @@ func (store SystemDB) AddUserToResourceRole(context User, urr UserResourceRole) 
 	//	Return our result
 
 	return retval, nil
+}
+
+// getUserGrants gets the grant hierarchy for a given user
+func (store SystemDB) getUserGrants(user User) GrantUser {
+
+	//	First, copy the necessary properties from the passed user
+	retval := GrantUser{
+		ID:          user.ID,
+		Name:        user.Name,
+		Description: user.Description,
+	}
+
+	//	Next, look in the user_resource_role table:
+	//	-- see what resources they have
+	//	-- see what roles they have on those resources
+	//	Build up the GrantUser hierarchy
+
+	//
+
+	return retval
 }

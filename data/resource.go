@@ -23,6 +23,14 @@ type Resource struct {
 	DeletedBy   null.String `json:"deleted_by"`
 }
 
+// GrantResource is part of the user/resource/role grant hierarchy
+type GrantResource struct {
+	ID          string
+	Name        string
+	Description string
+	GrantRoles  []GrantRole
+}
+
 // AddResource adds a resource to the system
 func (store SystemDB) AddResource(context User, resource Resource) (Resource, error) {
 	//	Our return item

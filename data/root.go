@@ -136,7 +136,7 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 		return adminUser, adminPassword, fmt.Errorf("Problem adding system resource: %s", err)
 	}
 
-	//	Create the default system roles:
+	//	Create the default system roles (id/name/description):
 	_, err = tx.Exec(defaultSystemRole, systemAdminRoleID, "sys_admin", "System admin role")
 	if err != nil {
 		tx.Rollback()
@@ -147,6 +147,19 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 	if err != nil {
 		tx.Rollback()
 		return adminUser, adminPassword, fmt.Errorf("Problem adding system role: %s", err)
+	}
+
+	//	Create the default system credentials (user/resource/role):
+	_, err = tx.Exec(defaultSystemCredentials, adminID, systemResourceID, systemAdminRoleID)
+	if err != nil {
+		tx.Rollback()
+		return adminUser, adminPassword, fmt.Errorf("Problem adding system credential: %s", err)
+	}
+
+	_, err = tx.Exec(defaultSystemCredentials, adminID, systemResourceID, systemDelegateRoleID)
+	if err != nil {
+		tx.Rollback()
+		return adminUser, adminPassword, fmt.Errorf("Problem adding system credential: %s", err)
 	}
 
 	//	Commit our transaction

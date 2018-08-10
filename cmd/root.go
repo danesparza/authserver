@@ -74,6 +74,8 @@ func initConfig() {
 	viper.SetDefault("apiservice.port", "3000")
 	viper.SetDefault("uiservice.port", "3001")
 	viper.SetDefault("apiservice.allowed-origins", "*")
+	viper.SetDefault("datastore.system", "system.db")
+	viper.SetDefault("datastore.tokens", "tokens.db")
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err != nil {
