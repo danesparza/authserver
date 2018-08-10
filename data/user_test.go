@@ -72,13 +72,12 @@ func TestUser_AddUser_Successful(t *testing.T) {
 	}
 }
 
-/*
 func TestUser_GetAllUsers_NoItems_NoErrors(t *testing.T) {
 	//	Arrange
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename, os.Getenv("UNITTEST_INFLUX_URL"))
+	db, err := data.NewSystemDB(filename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
@@ -109,15 +108,13 @@ func TestUser_GetAllUsers_NoItems_NoErrors(t *testing.T) {
 		t.Errorf("GetAllUsers failed: Should have gotten a single item")
 	}
 }
-*/
 
-/*
 func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 	//	Arrange
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename, os.Getenv("UNITTEST_INFLUX_URL"))
+	db, err := data.NewSystemDB(filename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
@@ -173,8 +170,7 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 		t.Errorf("GetAllUsers failed: Should have gotten the items without error: %s", err)
 	}
 
-	if len(response) != 3 {
-		t.Errorf("GetAllUsers failed: Should have gotten all users")
+	if len(response) != 4 { // Don't forget bootstrapping adds the admin user
+		t.Errorf("GetAllUsers failed: Should have gotten all users.  Actually got: %v", len(response))
 	}
 }
-*/

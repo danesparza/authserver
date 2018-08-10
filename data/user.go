@@ -117,15 +117,40 @@ func (store SystemDB) AddUser(context User, user User, userPassword string) (Use
 	return retval, nil
 }
 
-/*
 // GetAllUsers returns an array of all users
 func (store SystemDB) GetAllUsers(context User) ([]User, error) {
 	retval := []User{}
 
 	//	Get all the items:
-	err := store.db.Select(&retval, "select * from user")
+	rows, err := store.db.Query("SELECT id, enabled, name, description, secrethash, created, createdby, updated, updatedby, deleted, deletedby FROM user")
 	if err != nil {
-		return retval, fmt.Errorf("Problem fetching all users: %s", err)
+		return retval, fmt.Errorf("Problem selecting all users: %s", err)
+	}
+
+	for rows.Next() {
+		item := User{}
+
+		if err = rows.Scan(
+			&item.ID,
+			&item.Enabled,
+			&item.Name,
+			&item.Description,
+			&item.SecretHash,
+			&item.Created,
+			&item.CreatedBy,
+			&item.Updated,
+			&item.UpdatedBy,
+			&item.Deleted,
+			&item.DeletedBy); err != nil {
+			rows.Close()
+			break
+		}
+
+		retval = append(retval, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		return retval, fmt.Errorf("Problem scanning all users: %s", err)
 	}
 
 	//	Return our slice:
@@ -159,4 +184,3 @@ func (store SystemDB) AddUserToResourceRole(context User, urr UserResourceRole) 
 
 	return retval, nil
 }
-*/
