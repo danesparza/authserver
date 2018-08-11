@@ -228,3 +228,41 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 		t.Errorf("GetAllUsers failed: Should have gotten all users.  Actually got: %v", len(response))
 	}
 }
+
+func TestUser_GetUserGrants_Successful(t *testing.T) {
+	//	Arrange
+	filename := getTestFile()
+	defer os.Remove(filename)
+
+	db, err := data.NewSystemDB(filename)
+	if err != nil {
+		t.Errorf("NewSystemDB failed: %s", err)
+	}
+	defer db.Close()
+	//	No data exists yet!
+
+	//	Act
+	response, secret, err := db.AuthSystemBootstrap()
+	grantinfo, gerr := db.GetUserGrants(response)
+
+	//	Assert
+	if err != nil {
+		t.Errorf("Init failed: Should init without error: %s", err)
+	}
+
+	if gerr != nil {
+		t.Errorf("GetUserGrants: Should get grants without error: %s", err)
+	}
+
+	if response.ID != "bdldpjad2pm0cd64ra80" || response.Name != "admin" {
+		t.Errorf("Init failed: Should create admin user: %+v", response)
+	}
+
+	if secret == "" {
+		t.Errorf("Init failed: Should return admin user secret: %s", secret)
+	}
+
+	if len(grantinfo.GrantResources) != 1 {
+		t.Errorf("GetUserGrants failed: Should return all grants, but got: %v", len(grantinfo.GrantResources))
+	}
+}

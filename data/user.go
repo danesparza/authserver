@@ -185,8 +185,8 @@ func (store SystemDB) AddUserToResourceRole(context User, urr UserResourceRole) 
 	return retval, nil
 }
 
-// getUserGrants gets the grant hierarchy for a given user
-func (store SystemDB) getUserGrants(user User) GrantUser {
+// GetUserGrants gets the grant hierarchy for a given user
+func (store SystemDB) GetUserGrants(user User) (GrantUser, error) {
 
 	//	First, copy the necessary properties from the passed user
 	retval := GrantUser{
@@ -199,8 +199,30 @@ func (store SystemDB) getUserGrants(user User) GrantUser {
 	//	-- see what resources they have
 	//	-- see what roles they have on those resources
 	//	Build up the GrantUser hierarchy
+	rows, err := store.db.Query(getResourcesForUser, user.ID)
+	if err != nil {
+		return retval, fmt.Errorf("Problem getting resources for user %s / %v: %s", user.Name, user.ID, err)
+	}
+
+	for rows.Next() {
+		item := GrantResource{}
+
+		if err = rows.Scan(
+			&item.ID,
+			&item.Name,
+			&item.Description); err != nil {
+			rows.Close()
+			break
+		}
+
+		retval.GrantResources = append(retval.GrantResources, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		return retval, fmt.Errorf("Problem scanning resources for user %s / %v: %s", user.Name, user.ID, err)
+	}
 
 	//
 
-	return retval
+	return retval, nil
 }
