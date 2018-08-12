@@ -205,24 +205,47 @@ func (store SystemDB) GetUserGrants(user User) (GrantUser, error) {
 	}
 
 	for rows.Next() {
-		item := GrantResource{}
+		gres := GrantResource{}
 
 		if err = rows.Scan(
-			&item.ID,
-			&item.Name,
-			&item.Description); err != nil {
+			&gres.ID,
+			&gres.Name,
+			&gres.Description); err != nil {
 			rows.Close()
 			break
 		}
 
-		retval.GrantResources = append(retval.GrantResources, item)
+		//	Now that we have a resource, see what roles we should add to it for this user:
+		rolesrows, err := store.db.Query(getRolesForUserAndResources, user.ID, gres.ID)
+		if err != nil {
+			return retval, fmt.Errorf("Problem getting resources for user %s / %v: %s", user.Name, user.ID, err)
+		}
+
+		for rolesrows.Next() {
+			grole := GrantRole{}
+
+			if err = rolesrows.Scan(
+				&grole.ID,
+				&grole.Name,
+				&grole.Description); err != nil {
+				rolesrows.Close()
+				break
+			}
+
+			gres.GrantRoles = append(gres.GrantRoles, grole)
+
+		}
+
+		if err = rolesrows.Err(); err != nil {
+			return retval, fmt.Errorf("Problem scanning roles for user %s / %v & resource %s / %v: %s", user.Name, user.ID, gres.Name, gres.ID, err)
+		}
+
+		retval.GrantResources = append(retval.GrantResources, gres)
 	}
 
 	if err = rows.Err(); err != nil {
 		return retval, fmt.Errorf("Problem scanning resources for user %s / %v: %s", user.Name, user.ID, err)
 	}
-
-	//
 
 	return retval, nil
 }

@@ -26,7 +26,7 @@ type Role struct {
 // GrantRole is part of the user/resource/role grant hierarchy
 type GrantRole struct {
 	ID          string
-	name        string
+	Name        string
 	Description string
 }
 

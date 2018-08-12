@@ -265,4 +265,7 @@ func TestUser_GetUserGrants_Successful(t *testing.T) {
 	if len(grantinfo.GrantResources) != 1 {
 		t.Errorf("GetUserGrants failed: Should return all grants, but got: %v", len(grantinfo.GrantResources))
 	}
+
+	//	Spit out what we found (for debugging):
+	t.Logf("Grants found: %+v", grantinfo)
 }

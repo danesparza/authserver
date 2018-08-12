@@ -150,12 +150,14 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 	}
 
 	//	Create the default system credentials (user/resource/role):
+	//	-- Admins get the sysadmin role
 	_, err = tx.Exec(defaultSystemCredentials, adminID, systemResourceID, systemAdminRoleID)
 	if err != nil {
 		tx.Rollback()
 		return adminUser, adminPassword, fmt.Errorf("Problem adding system credential: %s", err)
 	}
 
+	//	-- Admins also get the delegate role
 	_, err = tx.Exec(defaultSystemCredentials, adminID, systemResourceID, systemDelegateRoleID)
 	if err != nil {
 		tx.Rollback()

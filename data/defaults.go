@@ -131,3 +131,17 @@ where
 	resource.id = user_resource_role.resourceid 
 	and user_resource_role.userid = $1
 `
+
+// getRolesForUserAndResources is the query to get all roles for a given user and resource.  It requires 2 parameters:
+// - the id of the user to check
+// - the id of the resource to check
+var getRolesForUserAndResources = `
+select 
+	distinct role.id, role.name, role.description 
+from 
+	role, user_resource_role 
+where 
+	role.id = user_resource_role.roleid
+	and user_resource_role.userid = $1
+	and user_resource_role.resourceid = $2  	
+`
