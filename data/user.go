@@ -157,13 +157,43 @@ func (store SystemDB) GetAllUsers(context User) ([]User, error) {
 	return retval, nil
 }
 
-// GetUserWithCredentials - used for token creation process (to login a user)
-func (store SystemDB) GetUserWithCredentials(name, secret string) (User, string, error) {
-	retUser := User{}
-	retToken := ""
+// GetUserGrantsWithCredentials - verifies credentials and returns the grantuser hierarchy
+func (store SystemDB) GetUserGrantsWithCredentials(name, secret string) (GrantUser, error) {
+	retUser := GrantUser{}
+
+	//	First, find the user with the given name and get the hashed password
+	user := User{}
+	err := store.db.QueryRow("SELECT id, enabled, name, description, secrethash, created, createdby, updated, updatedby, deleted, deletedby FROM user WHERE name=$1;", name).Scan(
+		&user.ID,
+		&user.Enabled,
+		&user.Name,
+		&user.Description,
+		&user.SecretHash,
+		&user.Created,
+		&user.CreatedBy,
+		&user.Updated,
+		&user.UpdatedBy,
+		&user.Deleted,
+		&user.DeletedBy,
+	)
+	if err != nil {
+		return retUser, fmt.Errorf("Problem selecting user: %s", err)
+	}
+
+	// Compare the given password with the hash
+	err = bcrypt.CompareHashAndPassword([]byte(user.SecretHash), []byte(secret))
+	if err != nil { // nil means it is a match
+		return retUser, fmt.Errorf("The user was not found or the password was incorrect")
+	}
+
+	//	If everything checks out, get the grantuser information and return it:
+	retUser, err = store.getUserGrants(user)
+	if err != nil {
+		return retUser, fmt.Errorf("Problem fetching grants for the user: %s", err)
+	}
 
 	//	Return our user:
-	return retUser, retToken, nil
+	return retUser, nil
 }
 
 // AddUserToResourceRole adds the specified user to the resource role.
@@ -185,8 +215,8 @@ func (store SystemDB) AddUserToResourceRole(context User, urr UserResourceRole) 
 	return retval, nil
 }
 
-// GetUserGrants gets the grant hierarchy for a given user
-func (store SystemDB) GetUserGrants(user User) (GrantUser, error) {
+// getUserGrants gets the grant hierarchy for a given user
+func (store SystemDB) getUserGrants(user User) (GrantUser, error) {
 
 	//	First, copy the necessary properties from the passed user
 	retval := GrantUser{
