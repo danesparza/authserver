@@ -31,15 +31,13 @@ func TestUser_AddUser_Successful(t *testing.T) {
 	defer db.Close()
 
 	//	Bootstrap
-	_, _, err = db.AuthSystemBootstrap()
+	response, _, err := db.AuthSystemBootstrap()
 	if err != nil {
 		t.Errorf("AuthSystemBootstrap failed: Should have bootstrapped without error: %s", err)
 	}
 
 	//	Our 'context' user (the one performing the action)
-	uctx := data.User{
-		Name: "Admin",
-	}
+	uctx := response
 
 	//	Create new user:
 	u1 := data.User{
@@ -84,15 +82,13 @@ func TestUser_AddDuplicateUser_ReturnsError(t *testing.T) {
 	defer db.Close()
 
 	//	Bootstrap
-	_, _, err = db.AuthSystemBootstrap()
+	response, _, err := db.AuthSystemBootstrap()
 	if err != nil {
 		t.Errorf("AuthSystemBootstrap failed: Should have bootstrapped without error: %s", err)
 	}
 
 	//	Our 'context' user (the one performing the action)
-	uctx := data.User{
-		Name: "Admin",
-	}
+	uctx := response
 
 	//	Create new user:
 	u1 := data.User{
@@ -175,14 +171,9 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 	defer db.Close()
 
 	//	Bootstrap
-	_, _, err = db.AuthSystemBootstrap()
+	uctx, _, err := db.AuthSystemBootstrap()
 	if err != nil {
 		t.Errorf("AuthSystemBootstrap failed: Should have bootstrapped without error: %s", err)
-	}
-
-	//	Our 'context' user (the one performing the action)
-	uctx := data.User{
-		Name: "Admin",
 	}
 
 	//	Our new password:

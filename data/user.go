@@ -33,15 +33,15 @@ type User struct {
 // a resource (application/service), and the roles that user has
 // been assigned within the resource (application/service)
 type UserResourceRole struct {
-	UserID     string    `json:"userid"`
-	ResourceID string    `json:"resourceid"`
-	RoleID     string    `json:"roleid"`
-	Created    time.Time `json:"created"`
-	CreatedBy  string    `json:"created_by"`
-	Updated    time.Time `json:"updated"`
-	UpdatedBy  string    `json:"updated_by"`
-	Deleted    time.Time `json:"deleted"`
-	DeletedBy  string    `json:"deleted_by"`
+	UserID     string      `json:"userid"`
+	ResourceID string      `json:"resourceid"`
+	RoleID     string      `json:"roleid"`
+	Created    time.Time   `json:"created"`
+	CreatedBy  string      `json:"created_by"`
+	Updated    time.Time   `json:"updated"`
+	UpdatedBy  string      `json:"updated_by"`
+	Deleted    zero.Time   `json:"deleted"`
+	DeletedBy  null.String `json:"deleted_by"`
 }
 
 // GrantUser is a hierarchy of a user and the resource and role
@@ -59,6 +59,10 @@ func (store SystemDB) AddUser(context User, user User, userPassword string) (Use
 	retval := User{}
 
 	//	Validate:  Does the context user have permission to make the change?
+	if store.userHasResourceRole(context.ID, systemResourceID, systemAdminRoleID) == false {
+		//	Return an error:
+		return retval, fmt.Errorf("User %s does not have permission to add a user to the system", context.Name)
+	}
 
 	//	Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userPassword), bcrypt.DefaultCost)
@@ -196,23 +200,30 @@ func (store SystemDB) GetUserGrantsWithCredentials(name, secret string) (GrantUs
 	return retUser, nil
 }
 
-// AddUserToResourceRole adds the specified user to the resource role.
-// Returns an error if the user, resource, or role don't already exist
-func (store SystemDB) AddUserToResourceRole(context User, urr UserResourceRole) (UserResourceRole, error) {
+// userHasResourceRole returns 'true' if a given user has a given resource role, false if they don't
+func (store SystemDB) userHasResourceRole(userID, resourceID, roleID string) bool {
+	retval := false
 
-	//	Our return item
-	retval := UserResourceRole{}
+	urr := UserResourceRole{}
+	err := store.db.QueryRow("SELECT userid, resourceid, roleid, created, createdby, updated, updatedby, deleted, deletedby FROM user_resource_role WHERE userid=$1 and resourceid = $2 and roleid = $3;", userID, resourceID, roleID).Scan(
+		&urr.UserID,
+		&urr.ResourceID,
+		&urr.RoleID,
+		&urr.Created,
+		&urr.CreatedBy,
+		&urr.Updated,
+		&urr.UpdatedBy,
+		&urr.Deleted,
+		&urr.DeletedBy,
+	)
+	if err != nil {
+		return retval
+	}
 
-	//	Get the user/resource/role - make sure they all exist.
-	//	Throw an error if one of them doesn't exist in the system
+	//	If we got this far, we must have found the item:
+	retval = true
 
-	//	Create a compound key based on all 3 ids
-
-	//	Add / update the item in the system
-
-	//	Return our result
-
-	return retval, nil
+	return retval
 }
 
 // getUserGrants gets the grant hierarchy for a given user
@@ -276,6 +287,23 @@ func (store SystemDB) getUserGrants(user User) (GrantUser, error) {
 	if err = rows.Err(); err != nil {
 		return retval, fmt.Errorf("Problem scanning resources for user %s / %v: %s", user.Name, user.ID, err)
 	}
+
+	return retval, nil
+}
+
+// AddUserToResourceWithRole adds the specified user to the resource and assigns the given role.
+// Returns an error if the user, resource, or role don't already exist
+func (store SystemDB) AddUserToResourceWithRole(context, user User, resource Resource, role Role) (UserResourceRole, error) {
+
+	//	Our return item
+	retval := UserResourceRole{}
+
+	//	Get the user/resource/role - make sure they all exist.
+	//	Throw an error if one of them doesn't exist in the system
+
+	//	Add / update the item in the system
+
+	//	Return our result
 
 	return retval, nil
 }
