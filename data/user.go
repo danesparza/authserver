@@ -62,7 +62,7 @@ func (store SystemDB) AddUser(context User, user User, userPassword string) (Use
 	//	Validate:  Does the context user have permission to make the change?
 	if store.userHasResourceRole(context.ID, systemResourceID, systemAdminRoleID, systemDelegateRoleID) == false {
 		//	Return an error:
-		return retval, fmt.Errorf("User %s does not have permission to add a user to the system", context.Name)
+		return retval, fmt.Errorf("User '%s' does not have permission to add a user to the system", context.Name)
 	}
 
 	//	Hash the password

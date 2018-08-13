@@ -31,15 +31,13 @@ func TestRole_AddRole_Successful(t *testing.T) {
 	defer db.Close()
 
 	//	Bootstrap
-	_, _, err = db.AuthSystemBootstrap()
+	bresponse, _, err := db.AuthSystemBootstrap()
 	if err != nil {
 		t.Errorf("AuthSystemBootstrap failed: Should have bootstrapped without error: %s", err)
 	}
 
 	//	Our 'context' user (the one performing the action)
-	uctx := data.User{
-		Name: "Admin",
-	}
+	uctx := bresponse
 
 	//	Create new resource:
 	r1 := data.Role{
@@ -80,15 +78,13 @@ func TestRole_AddDuplicateRole_Successful(t *testing.T) {
 	defer db.Close()
 
 	//	Bootstrap
-	_, _, err = db.AuthSystemBootstrap()
+	bresponse, _, err := db.AuthSystemBootstrap()
 	if err != nil {
 		t.Errorf("AuthSystemBootstrap failed: Should have bootstrapped without error: %s", err)
 	}
 
 	//	Our 'context' user (the one performing the action)
-	uctx := data.User{
-		Name: "Admin",
-	}
+	uctx := bresponse
 
 	//	Create new resource:
 	r1 := data.Role{
@@ -128,14 +124,9 @@ func TestRole_GetAllRoles_NoItems_NoErrors(t *testing.T) {
 	defer db.Close()
 
 	//	Bootstrap
-	_, _, err = db.AuthSystemBootstrap()
+	uctx, _, err := db.AuthSystemBootstrap()
 	if err != nil {
 		t.Errorf("AuthSystemBootstrap failed: Should have bootstrapped without error: %s", err)
-	}
-
-	//	Our 'context' user (the one performing the action)
-	uctx := data.User{
-		Name: "Admin",
 	}
 
 	//	No items are in the database!
@@ -165,14 +156,9 @@ func TestRole_GetAllRoles_ItemsInDB_ReturnsItems(t *testing.T) {
 	defer db.Close()
 
 	//	Bootstrap
-	_, _, err = db.AuthSystemBootstrap()
+	uctx, _, err := db.AuthSystemBootstrap()
 	if err != nil {
 		t.Errorf("AuthSystemBootstrap failed: Should have bootstrapped without error: %s", err)
-	}
-
-	//	Our 'context' user (the one performing the action)
-	uctx := data.User{
-		Name: "Admin",
 	}
 
 	//	Try storing some roles:
