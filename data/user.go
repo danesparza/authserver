@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/rs/xid"
@@ -59,7 +60,7 @@ func (store SystemDB) AddUser(context User, user User, userPassword string) (Use
 	retval := User{}
 
 	//	Validate:  Does the context user have permission to make the change?
-	if store.userHasResourceRole(context.ID, systemResourceID, systemAdminRoleID) == false {
+	if store.userHasResourceRole(context.ID, systemResourceID, systemAdminRoleID, systemDelegateRoleID) == false {
 		//	Return an error:
 		return retval, fmt.Errorf("User %s does not have permission to add a user to the system", context.Name)
 	}
@@ -201,11 +202,42 @@ func (store SystemDB) GetUserGrantsWithCredentials(name, secret string) (GrantUs
 }
 
 // userHasResourceRole returns 'true' if a given user has a given resource role, false if they don't
-func (store SystemDB) userHasResourceRole(userID, resourceID, roleID string) bool {
+func (store SystemDB) userHasResourceRole(userID, resourceID string, roleIDs ...string) bool {
 	retval := false
 
+	//	Sanity check -- there needs to be at least one item in roleIDs
+	if len(roleIDs) < 1 {
+		return false
+	}
+
 	urr := UserResourceRole{}
-	err := store.db.QueryRow("SELECT userid, resourceid, roleid, created, createdby, updated, updatedby, deleted, deletedby FROM user_resource_role WHERE userid=$1 and resourceid = $2 and roleid = $3;", userID, resourceID, roleID).Scan(
+
+	//	Create our variable list of args to pass to the query
+	args := []string{userID, resourceID}
+	args = append(args, roleIDs...)
+
+	//	Convert back to []interface{} (for the call to QueryRow)
+	//	-- from https://stackoverflow.com/a/27689178/19020
+	qrargs := make([]interface{}, len(args))
+	for i, v := range args {
+		qrargs[i] = v
+	}
+
+	//	Create the base query and suffix:
+	query := "SELECT userid, resourceid, roleid, created, createdby, updated, updatedby, deleted, deletedby FROM user_resource_role WHERE userid=$1 and resourceid = $2 and ("
+	queryroles := []string{}
+	querySuffix := ");"
+
+	//	Loop through each item in roleIDs...
+	for ri := 0; ri < len(roleIDs); ri++ {
+		formattedRoleIDIndex := 3 + ri
+		queryroles = append(queryroles, fmt.Sprintf("roleid = $%v", formattedRoleIDIndex))
+	}
+
+	//	Append our suffix
+	query = query + strings.Join(queryroles, " or ") + querySuffix
+
+	err := store.db.QueryRow(query, qrargs...).Scan(
 		&urr.UserID,
 		&urr.ResourceID,
 		&urr.RoleID,
