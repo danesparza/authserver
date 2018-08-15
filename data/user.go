@@ -330,12 +330,119 @@ func (store SystemDB) AddUserToResourceWithRole(context, user User, resource Res
 	//	Our return item
 	retval := UserResourceRole{}
 
-	//	Get the user/resource/role - make sure they all exist.
-	//	Throw an error if one of them doesn't exist in the system
+	//	Validate:  Does the context user have permission to make the change?
+	if store.userHasResourceRole(context.ID, systemResourceID, systemAdminRoleID) == false {
+		//	Return an error:
+		return retval, fmt.Errorf("User '%s' does not have permission to add a user to '%s/%s'", context.Name, resource.Name, role.Name)
+	}
 
-	//	Add / update the item in the system
+	//	Get the user/resource/role - make sure they all exist - throw an error if they don't
+	if !store.userExists(user) || !store.resourceExists(resource) || !store.roleExists(role) {
+		//	Throw an error if one of them doesn't exist in the system
+		return retval, fmt.Errorf("The user, resource, and role must already exist in the system")
+	}
+
+	//	If they all exist, then add the item in the system...
+
+	//	Start a transaction:
+	tx, err := store.db.Begin()
+	if err != nil {
+		return retval, fmt.Errorf("An error occurred starting a transaction for a user/resource/role: %s", err)
+	}
+
+	//	Insert the item
+	_, err = tx.Exec(`INSERT INTO 
+		user_resource_role (userid, resourceid, roleid, created, createdby, updated, updatedby) 
+			VALUES ($1, $2, $3, now(), $4, now(), $4);`,
+		user.ID,
+		resource.ID,
+		role.ID,
+		context.Name,
+	)
+	if err != nil {
+		tx.Rollback()
+		return retval, fmt.Errorf("An error occurred adding the user/resource/role: %s", err)
+	}
+
+	//	Commit the transaction
+	err = tx.Commit()
+	if err != nil {
+		return retval, fmt.Errorf("An error occurred committing a transaction for a user/resource/role: %s", err)
+	}
+
+	//	Get the user/resource/role
+	err = store.db.QueryRow("SELECT userid, resourceid, roleid, created, createdby, updated, updatedby, deleted, deletedby FROM user_resource_role WHERE userid=$1 and resourceid=$2 and roleid=$3;", user.ID, resource.ID, role.ID).Scan(
+		&retval.UserID,
+		&retval.ResourceID,
+		&retval.RoleID,
+		&retval.Created,
+		&retval.CreatedBy,
+		&retval.Updated,
+		&retval.UpdatedBy,
+		&retval.Deleted,
+		&retval.DeletedBy,
+	)
+	if err != nil {
+		return retval, fmt.Errorf("Problem selecting user/resource/role object: %s", err)
+	}
 
 	//	Return our result
-
 	return retval, nil
+}
+
+// userExists returns 'true' if the user can be found, 'false' if it can't be found
+func (store SystemDB) userExists(user User) bool {
+	retval := false
+
+	item := User{}
+	err := store.db.QueryRow("SELECT id, name FROM user WHERE id=$1;", user.ID).Scan(
+		&item.ID,
+		&item.Name,
+	)
+	if err != nil {
+		return false
+	}
+
+	//	We've gotten this far -- we must have found something
+	retval = true
+
+	return retval
+}
+
+// resourceExists returns 'true' if the resource can be found, 'false' if it can't be found
+func (store SystemDB) resourceExists(resource Resource) bool {
+	retval := false
+
+	item := Resource{}
+	err := store.db.QueryRow("SELECT id, name FROM resource WHERE id=$1", resource.ID).Scan(
+		&item.ID,
+		&item.Name,
+	)
+	if err != nil {
+		return false
+	}
+
+	//	We've gotten this far -- we must have found something
+	retval = true
+
+	return retval
+}
+
+// roleExists returns 'true' if the role can be found, 'false' if it can't be found
+func (store SystemDB) roleExists(role Role) bool {
+	retval := false
+
+	item := Role{}
+	err := store.db.QueryRow("SELECT id, name FROM role WHERE id=$1;", role.ID).Scan(
+		&item.ID,
+		&item.Name,
+	)
+	if err != nil {
+		return false
+	}
+
+	//	We've gotten this far -- we must have found something
+	retval = true
+
+	return retval
 }

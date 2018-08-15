@@ -341,3 +341,56 @@ func TestUser_AddUser_NoCredentials_ReturnsError(t *testing.T) {
 		t.Errorf("AddUser failed: Should not have added user2 because context user didn't have permission")
 	}
 }
+
+func TestUser_AddUser_ValidCredentials_Successful(t *testing.T) {
+	//	Arrange
+	filename := getTestFile()
+	defer os.Remove(filename)
+
+	db, err := data.NewSystemDB(filename)
+	if err != nil {
+		t.Errorf("NewSystemDB failed: %s", err)
+	}
+	defer db.Close()
+
+	//	Bootstrap
+	uctx, _, err := db.AuthSystemBootstrap()
+	if err != nil {
+		t.Errorf("AuthSystemBootstrap failed: Should have bootstrapped without error: %s", err)
+	}
+
+	//	Our new password:
+	userPassword := "newpassword"
+
+	//	Add a users:
+	newUser1, err := db.AddUser(uctx, data.User{
+		Name:        "TestUser1",
+		SecretHash:  "SomeRandomSecret1",
+		Description: "Unit test user 1",
+	}, userPassword)
+	if err != nil {
+		t.Errorf("AddUser failed: Should have created user1 without issue, but got error: %s", err)
+	}
+
+	//	Act
+	//	Add user to the system / admin resource & role
+	_, err = db.AddUserToResourceWithRole(uctx, newUser1, data.Resource{ID: "bdldpjad2pm0cd64ra81"}, data.Role{ID: "bdldpjad2pm0cd64ra82"})
+	if err != nil {
+		t.Errorf("AddUserToResourceWithRole failed: Should have added newUser1 to the system admin resource and role without error, but got: %s", err)
+	}
+
+	//	Make the new user the context user
+	uctx = newUser1
+
+	//	Try to add a user with the newly created system admin:
+	_, err = db.AddUser(uctx, data.User{
+		Name:        "TestUser2",
+		SecretHash:  "SomeRandomSecret2",
+		Description: "Unit test user 2",
+	}, userPassword)
+
+	//	Assert
+	if err != nil {
+		t.Errorf("AddUser failed: Should have created a new user without an error, but got: %s", err)
+	}
+}
