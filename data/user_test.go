@@ -295,3 +295,49 @@ func TestUser_GetGrantUserWithCredentials_WrongCredentials_ReturnsError(t *testi
 	//	Spit out what we found (for debugging):
 	//	t.Logf("Grants found: %+v", grantinfo)
 }
+
+func TestUser_AddUser_NoCredentials_ReturnsError(t *testing.T) {
+	//	Arrange
+	filename := getTestFile()
+	defer os.Remove(filename)
+
+	db, err := data.NewSystemDB(filename)
+	if err != nil {
+		t.Errorf("NewSystemDB failed: %s", err)
+	}
+	defer db.Close()
+
+	//	Bootstrap
+	uctx, _, err := db.AuthSystemBootstrap()
+	if err != nil {
+		t.Errorf("AuthSystemBootstrap failed: Should have bootstrapped without error: %s", err)
+	}
+
+	//	Our new password:
+	userPassword := "newpassword"
+
+	//	Add a users:
+	newUser1, err := db.AddUser(uctx, data.User{
+		Name:        "TestUser1",
+		SecretHash:  "SomeRandomSecret1",
+		Description: "Unit test user 1",
+	}, userPassword)
+	if err != nil {
+		t.Errorf("AddUser failed: Should have created user1 without issue, but got error: %s", err)
+	}
+
+	uctx = newUser1
+
+	//	Act
+	//	Make the context user that user and try to add a user:
+	_, err = db.AddUser(uctx, data.User{
+		Name:        "TestUser2",
+		SecretHash:  "SomeRandomSecret2",
+		Description: "Unit test user 2",
+	}, userPassword)
+
+	//	Assert
+	if err == nil {
+		t.Errorf("AddUser failed: Should not have added user2 because context user didn't have permission")
+	}
+}
