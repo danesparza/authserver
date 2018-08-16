@@ -11,5 +11,4 @@ Why reimplement OAuth in your app if you don't have to?
 * Bootstrap the system using `authserver bootstrap`.  This will create the admin password for your system and display it.  Please make a note of it -- you'll only see it once.
 * Start the service and admin UI using `authserver start`
 
-## Data model
-![Data model](https://github.com/danesparza/authserver/raw/master/data_model.svg?sanitize=true)
+
