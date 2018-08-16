@@ -29,7 +29,7 @@ func (store SystemDB) AddRole(context User, role Role) (Role, error) {
 	retval := Role{}
 
 	//	Validate:  Does the context user have permission to execute the request?
-	if store.userHasResourceRole(context.ID, BuiltIn.SystemResource, BuiltIn.AdminRole) == false {
+	if store.userIsSystemAdmin(context.ID) == false && store.userIsResourceDelegate(context.ID) == false {
 		//	Return an error:
 		return retval, fmt.Errorf("User '%s' does not have permission to add a role to the system", context.Name)
 	}

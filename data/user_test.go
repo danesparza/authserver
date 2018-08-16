@@ -361,20 +361,34 @@ func TestUser_AddUser_NewResourceAndRole_Successful(t *testing.T) {
 		t.Errorf("AddUserToResourceWithRole failed: Should have added newUser1 to the system admin resource and role without error, but got: %s", err)
 	}
 
-	//	Act
+	//	Act / Assert
 
 	//	Make the new user the context user
 	uctx = newUser1
 
 	//	Try to add a user with the newly created resource delgate:
-	_, err = db.AddUser(uctx, data.User{
+	newAppUser, err := db.AddUser(uctx, data.User{
 		Name:        "TestUser2",
 		SecretHash:  "SomeRandomSecret2",
 		Description: "Unit test user 2",
 	}, userPassword)
 
-	//	Assert
 	if err != nil {
 		t.Errorf("AddUser failed: Should have created a new user (as a resource delegate) without an error, but got: %s", err)
+	}
+
+	//	Add a new role
+	newAppRole, err := db.AddRole(uctx, data.Role{
+		Name: "Special_access",
+	})
+
+	if err != nil {
+		t.Errorf("AddRole failed: Should have created a new role (as a resource delegate) without an error, but got: %s", err)
+	}
+
+	//	Add the new user to the new resource and role (with the resource delegate as the context user)
+	_, err = db.AddUserToResourceWithRole(uctx, newAppUser, newResource1, newAppRole)
+	if err != nil {
+		t.Errorf("AddUserToResourceWithRole failed: Should have added newAppUser to the newResource1 and newAppRole without error, but got: %s", err)
 	}
 }

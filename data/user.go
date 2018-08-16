@@ -276,7 +276,7 @@ func (store SystemDB) AddUserToResourceWithRole(context, user User, resource Res
 	retval := UserResourceRole{}
 
 	//	Validate:  Does the context user have permission to make the change?
-	if store.userHasResourceRole(context.ID, BuiltIn.SystemResource, BuiltIn.AdminRole) == false {
+	if store.userIsSystemAdmin(context.ID) == false && store.userHasResourceRole(context.ID, resource.ID, BuiltIn.ResourceDelegateRole) == false {
 		//	Return an error:
 		return retval, fmt.Errorf("User '%s' does not have permission to add a user to '%s/%s'", context.Name, resource.Name, role.Name)
 	}
