@@ -128,6 +128,21 @@ func (store SystemDB) GetAllResources(context User) ([]Resource, error) {
 	return retval, nil
 }
 
-//	GetResourceById - used for lookups / validation before relating data
+// resourceExists returns 'true' if the resource can be found, 'false' if it can't be found
+func (store SystemDB) resourceExists(resource Resource) bool {
+	retval := false
 
-//	GetResourceByName - used for resource checks
+	item := Resource{}
+	err := store.db.QueryRow("SELECT id, name FROM resource WHERE id=$1", resource.ID).Scan(
+		&item.ID,
+		&item.Name,
+	)
+	if err != nil {
+		return false
+	}
+
+	//	We've gotten this far -- we must have found something
+	retval = true
+
+	return retval
+}

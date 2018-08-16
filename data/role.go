@@ -127,6 +127,21 @@ func (store SystemDB) GetAllRoles(context User) ([]Role, error) {
 	return retval, nil
 }
 
-//	GetRoleById - used for lookups / validation before relating data
+// roleExists returns 'true' if the role can be found, 'false' if it can't be found
+func (store SystemDB) roleExists(role Role) bool {
+	retval := false
 
-//	GetRoleByName - used for role checks
+	item := Role{}
+	err := store.db.QueryRow("SELECT id, name FROM role WHERE id=$1;", role.ID).Scan(
+		&item.ID,
+		&item.Name,
+	)
+	if err != nil {
+		return false
+	}
+
+	//	We've gotten this far -- we must have found something
+	retval = true
+
+	return retval
+}
