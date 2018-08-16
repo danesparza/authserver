@@ -220,82 +220,6 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 	}
 }
 
-func TestUser_GetGrantUserWithCredentials_ValidCredentials_Successful(t *testing.T) {
-	//	Arrange
-	filename := getTestFile()
-	defer os.Remove(filename)
-
-	db, err := data.NewSystemDB(filename)
-	if err != nil {
-		t.Errorf("NewSystemDB failed: %s", err)
-	}
-	defer db.Close()
-
-	//	No data exists yet, so bootstrap
-	response, secret, err := db.AuthSystemBootstrap()
-
-	//	Act
-	grantinfo, gerr := db.GetUserGrantsWithCredentials(response.Name, secret)
-
-	//	Assert
-	if err != nil {
-		t.Errorf("Init failed: Should init without error: %s", err)
-	}
-
-	if gerr != nil {
-		t.Errorf("GetUserGrantsWithCredentials: Should get grants without error: %s", err)
-	}
-
-	if response.ID != "bdldpjad2pm0cd64ra80" || response.Name != "admin" {
-		t.Errorf("Init failed: Should create admin user: %+v", response)
-	}
-
-	if secret == "" {
-		t.Errorf("Init failed: Should return admin user secret: %s", secret)
-	}
-
-	if len(grantinfo.GrantResources) != 1 {
-		t.Errorf("GetUserGrantsWithCredentials failed: Should return all grants, but got: %v", len(grantinfo.GrantResources))
-	}
-
-	//	Spit out what we found (for debugging):
-	//	t.Logf("Grants found: %+v", grantinfo)
-}
-
-func TestUser_GetGrantUserWithCredentials_WrongCredentials_ReturnsError(t *testing.T) {
-	//	Arrange
-	filename := getTestFile()
-	defer os.Remove(filename)
-
-	db, err := data.NewSystemDB(filename)
-	if err != nil {
-		t.Errorf("NewSystemDB failed: %s", err)
-	}
-	defer db.Close()
-
-	//	No data exists yet, so bootstrap
-	response, _, err := db.AuthSystemBootstrap()
-
-	//	Act
-	grantinfo, gerr := db.GetUserGrantsWithCredentials(response.Name, "INTENTIONALLY_WRONG_AND_VERY_INCORRECT_PASSWORD")
-
-	//	Assert
-	if err != nil {
-		t.Errorf("Init failed: Should init without error: %s", err)
-	}
-
-	if gerr == nil {
-		t.Errorf("GetUserGrantsWithCredentials: Should return error, but didn't")
-	}
-
-	if len(grantinfo.GrantResources) != 0 {
-		t.Errorf("GetUserGrantsWithCredentials failed: Should not retury any grant information, but got: %v", len(grantinfo.GrantResources))
-	}
-
-	//	Spit out what we found (for debugging):
-	//	t.Logf("Grants found: %+v", grantinfo)
-}
-
 func TestUser_AddUser_NoCredentials_ReturnsError(t *testing.T) {
 	//	Arrange
 	filename := getTestFile()
@@ -426,20 +350,23 @@ func TestUser_AddUser_NewResourceAndRole_Successful(t *testing.T) {
 	}
 
 	//	Create a new resource
+	newResource1, err := db.AddResource(uctx, data.Resource{Name: "Application 1", Description: "Unit test application"})
+	if err != nil {
+		t.Errorf("AddResource failed: Should have created newResource1 without issue, but got error: %s", err)
+	}
 
-	//	Add the user to the resource as a delegate admin
-
-	//	Act
-	//	Add user to the system / admin resource & role
-	_, err = db.AddUserToResourceWithRole(uctx, newUser1, data.Resource{ID: "bdldpjad2pm0cd64ra81"}, data.Role{ID: "bdldpjad2pm0cd64ra82"})
+	//	Add the user to the resource as a resource delegate
+	_, err = db.AddUserToResourceWithRole(uctx, newUser1, data.Resource{ID: newResource1.ID}, data.Role{ID: data.BuiltIn.ResourceDelegateRole})
 	if err != nil {
 		t.Errorf("AddUserToResourceWithRole failed: Should have added newUser1 to the system admin resource and role without error, but got: %s", err)
 	}
 
+	//	Act
+
 	//	Make the new user the context user
 	uctx = newUser1
 
-	//	Try to add a user with the newly created system admin:
+	//	Try to add a user with the newly created resource delgate:
 	_, err = db.AddUser(uctx, data.User{
 		Name:        "TestUser2",
 		SecretHash:  "SomeRandomSecret2",
@@ -448,6 +375,6 @@ func TestUser_AddUser_NewResourceAndRole_Successful(t *testing.T) {
 
 	//	Assert
 	if err != nil {
-		t.Errorf("AddUser failed: Should have created a new user without an error, but got: %s", err)
+		t.Errorf("AddUser failed: Should have created a new user (as a resource delegate) without an error, but got: %s", err)
 	}
 }

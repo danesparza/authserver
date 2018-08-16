@@ -23,13 +23,6 @@ type Role struct {
 	DeletedBy   null.String `json:"deleted_by"`
 }
 
-// GrantRole is part of the user/resource/role grant hierarchy
-type GrantRole struct {
-	ID          string
-	Name        string
-	Description string
-}
-
 // AddRole adds a role to the system
 func (store SystemDB) AddRole(context User, role Role) (Role, error) {
 	//	Our return item

@@ -45,22 +45,13 @@ type UserResourceRole struct {
 	DeletedBy  null.String `json:"deleted_by"`
 }
 
-// GrantUser is a hierarchy of a user and the resource and role
-// grants they have been assigned
-type GrantUser struct {
-	ID             string
-	Name           string
-	Description    string
-	GrantResources []GrantResource
-}
-
 // AddUser adds a user to the system
 func (store SystemDB) AddUser(context User, user User, userPassword string) (User, error) {
 	//	Our return item
 	retval := User{}
 
 	//	Validate:  Does the context user have permission to make the change?
-	if store.userHasResourceRole(context.ID, BuiltIn.SystemResource, BuiltIn.AdminRole, BuiltIn.ResourceDelegateRole) == false {
+	if store.userIsSystemAdmin(context.ID) == false && store.userIsResourceDelegate(context.ID) == false {
 		//	Return an error:
 		return retval, fmt.Errorf("User '%s' does not have permission to add a user to the system", context.Name)
 	}
@@ -162,43 +153,62 @@ func (store SystemDB) GetAllUsers(context User) ([]User, error) {
 	return retval, nil
 }
 
-// GetUserGrantsWithCredentials - verifies credentials and returns the grantuser hierarchy
-func (store SystemDB) GetUserGrantsWithCredentials(name, secret string) (GrantUser, error) {
-	retUser := GrantUser{}
+// userIsSystemAdmin returns 'true' if the passed user is a system admin
+func (store SystemDB) userIsSystemAdmin(userID string) bool {
+	retval := false
 
-	//	First, find the user with the given name and get the hashed password
-	user := User{}
-	err := store.db.QueryRow("SELECT id, enabled, name, description, secrethash, created, createdby, updated, updatedby, deleted, deletedby FROM user WHERE name=$1;", name).Scan(
-		&user.ID,
-		&user.Enabled,
-		&user.Name,
-		&user.Description,
-		&user.SecretHash,
-		&user.Created,
-		&user.CreatedBy,
-		&user.Updated,
-		&user.UpdatedBy,
-		&user.Deleted,
-		&user.DeletedBy,
+	urr := UserResourceRole{}
+
+	//	Create the base query and suffix:
+	query := "SELECT userid, resourceid, roleid, created, createdby, updated, updatedby, deleted, deletedby FROM user_resource_role WHERE userid=$1 and resourceid = $2 and roleid = $3;"
+	err := store.db.QueryRow(query, userID, BuiltIn.SystemResource, BuiltIn.AdminRole).Scan(
+		&urr.UserID,
+		&urr.ResourceID,
+		&urr.RoleID,
+		&urr.Created,
+		&urr.CreatedBy,
+		&urr.Updated,
+		&urr.UpdatedBy,
+		&urr.Deleted,
+		&urr.DeletedBy,
 	)
 	if err != nil {
-		return retUser, fmt.Errorf("Problem selecting user: %s", err)
+		return retval
 	}
 
-	// Compare the given password with the hash
-	err = bcrypt.CompareHashAndPassword([]byte(user.SecretHash), []byte(secret))
-	if err != nil { // nil means it is a match
-		return retUser, fmt.Errorf("The user was not found or the password was incorrect")
-	}
+	//	If we got this far, we must have found the item:
+	retval = true
 
-	//	If everything checks out, get the grantuser information and return it:
-	retUser, err = store.getUserGrants(user)
+	return retval
+}
+
+// userIsResourceDelegate returns 'true' if the passed user is a resource delegate
+func (store SystemDB) userIsResourceDelegate(userID string) bool {
+	retval := false
+
+	urr := UserResourceRole{}
+
+	//	Create the base query and suffix:
+	query := "SELECT userid, resourceid, roleid, created, createdby, updated, updatedby, deleted, deletedby FROM user_resource_role WHERE userid=$1 and roleid = $2;"
+	err := store.db.QueryRow(query, userID, BuiltIn.ResourceDelegateRole).Scan(
+		&urr.UserID,
+		&urr.ResourceID,
+		&urr.RoleID,
+		&urr.Created,
+		&urr.CreatedBy,
+		&urr.Updated,
+		&urr.UpdatedBy,
+		&urr.Deleted,
+		&urr.DeletedBy,
+	)
 	if err != nil {
-		return retUser, fmt.Errorf("Problem fetching grants for the user: %s", err)
+		return retval
 	}
 
-	//	Return our user:
-	return retUser, nil
+	//	If we got this far, we must have found the item:
+	retval = true
+
+	return retval
 }
 
 // userHasResourceRole returns 'true' if a given user has a given resource role, false if they don't
@@ -256,71 +266,6 @@ func (store SystemDB) userHasResourceRole(userID, resourceID string, roleIDs ...
 	retval = true
 
 	return retval
-}
-
-// getUserGrants gets the grant hierarchy for a given user
-func (store SystemDB) getUserGrants(user User) (GrantUser, error) {
-
-	//	First, copy the necessary properties from the passed user
-	retval := GrantUser{
-		ID:          user.ID,
-		Name:        user.Name,
-		Description: user.Description,
-	}
-
-	//	Next, look in the user_resource_role table:
-	//	-- see what resources they have
-	//	-- see what roles they have on those resources
-	//	Build up the GrantUser hierarchy
-	rows, err := store.db.Query(getResourcesForUser, user.ID)
-	if err != nil {
-		return retval, fmt.Errorf("Problem getting resources for user %s / %v: %s", user.Name, user.ID, err)
-	}
-
-	for rows.Next() {
-		gres := GrantResource{}
-
-		if err = rows.Scan(
-			&gres.ID,
-			&gres.Name,
-			&gres.Description); err != nil {
-			rows.Close()
-			break
-		}
-
-		//	Now that we have a resource, see what roles we should add to it for this user:
-		rolesrows, err := store.db.Query(getRolesForUserAndResources, user.ID, gres.ID)
-		if err != nil {
-			return retval, fmt.Errorf("Problem getting resources for user %s / %v: %s", user.Name, user.ID, err)
-		}
-
-		for rolesrows.Next() {
-			grole := GrantRole{}
-
-			if err = rolesrows.Scan(
-				&grole.ID,
-				&grole.Name,
-				&grole.Description); err != nil {
-				rolesrows.Close()
-				break
-			}
-
-			gres.GrantRoles = append(gres.GrantRoles, grole)
-
-		}
-
-		if err = rolesrows.Err(); err != nil {
-			return retval, fmt.Errorf("Problem scanning roles for user %s / %v & resource %s / %v: %s", user.Name, user.ID, gres.Name, gres.ID, err)
-		}
-
-		retval.GrantResources = append(retval.GrantResources, gres)
-	}
-
-	if err = rows.Err(); err != nil {
-		return retval, fmt.Errorf("Problem scanning resources for user %s / %v: %s", user.Name, user.ID, err)
-	}
-
-	return retval, nil
 }
 
 // AddUserToResourceWithRole adds the specified user to the resource and assigns the given role.
