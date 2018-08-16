@@ -37,7 +37,7 @@ func (store SystemDB) AddResource(context User, resource Resource) (Resource, er
 	retval := Resource{}
 
 	//	Validate:  Does the context user have permission to execute the request?
-	if store.userHasResourceRole(context.ID, systemResourceID, systemAdminRoleID) == false {
+	if store.userHasResourceRole(context.ID, BuiltIn.SystemResource, BuiltIn.AdminRole) == false {
 		//	Return an error:
 		return retval, fmt.Errorf("User '%s' does not have permission to add a resource to the system", context.Name)
 	}

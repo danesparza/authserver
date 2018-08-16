@@ -123,27 +123,27 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 	}
 
 	//	Add our default admin user - the insert statement requires some parameters be passed:
-	_, err = tx.Exec(defaultAdminUser, adminID, string(hashedPassword))
+	_, err = tx.Exec(defaultAdminUser, BuiltIn.AdminUser, string(hashedPassword))
 	if err != nil {
 		tx.Rollback()
 		return adminUser, adminPassword, fmt.Errorf("Problem adding admin user: %s", err)
 	}
 
 	//	Create the default system resources:
-	_, err = tx.Exec(defaultSystemResource, systemResourceID)
+	_, err = tx.Exec(defaultSystemResource, BuiltIn.SystemResource)
 	if err != nil {
 		tx.Rollback()
 		return adminUser, adminPassword, fmt.Errorf("Problem adding system resource: %s", err)
 	}
 
 	//	Create the default system roles (id/name/description):
-	_, err = tx.Exec(defaultSystemRole, systemAdminRoleID, "sys_admin", "System admin role")
+	_, err = tx.Exec(defaultSystemRole, BuiltIn.AdminRole, "sys_admin", "System admin role")
 	if err != nil {
 		tx.Rollback()
 		return adminUser, adminPassword, fmt.Errorf("Problem adding system role: %s", err)
 	}
 
-	_, err = tx.Exec(defaultSystemRole, systemDelegateRoleID, "sys_delegate", "Resource delegate role")
+	_, err = tx.Exec(defaultSystemRole, BuiltIn.ResourceDelegateRole, "sys_delegate", "Resource delegate role")
 	if err != nil {
 		tx.Rollback()
 		return adminUser, adminPassword, fmt.Errorf("Problem adding system role: %s", err)
@@ -151,14 +151,7 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 
 	//	Create the default system credentials (user/resource/role):
 	//	-- Admins get the sysadmin role
-	_, err = tx.Exec(defaultSystemCredentials, adminID, systemResourceID, systemAdminRoleID)
-	if err != nil {
-		tx.Rollback()
-		return adminUser, adminPassword, fmt.Errorf("Problem adding system credential: %s", err)
-	}
-
-	//	-- Admins also get the delegate role
-	_, err = tx.Exec(defaultSystemCredentials, adminID, systemResourceID, systemDelegateRoleID)
+	_, err = tx.Exec(defaultSystemCredentials, BuiltIn.AdminUser, BuiltIn.SystemResource, BuiltIn.AdminRole)
 	if err != nil {
 		tx.Rollback()
 		return adminUser, adminPassword, fmt.Errorf("Problem adding system credential: %s", err)
@@ -172,7 +165,7 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 
 	//	Get our admin user from the database and create our return object:
 	adminUser = User{}
-	err = store.db.QueryRow("SELECT id, enabled, name, description, secrethash, created, createdby, updated, updatedby, deleted, deletedby FROM user WHERE id=$1;", adminID).Scan(
+	err = store.db.QueryRow("SELECT id, enabled, name, description, secrethash, created, createdby, updated, updatedby, deleted, deletedby FROM user WHERE id=$1;", BuiltIn.AdminUser).Scan(
 		&adminUser.ID,
 		&adminUser.Enabled,
 		&adminUser.Name,

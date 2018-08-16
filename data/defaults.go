@@ -1,5 +1,23 @@
 package data
 
+// Defaults encapsulates system defaults
+type Defaults struct {
+	// AdminUser is the admin user id
+	AdminUser string
+
+	// SystemResource is the system resource id
+	SystemResource string
+
+	// AdminRole is the system admin role id
+	AdminRole string
+
+	// ResourceDelegateRole is the resource delegate role id
+	ResourceDelegateRole string
+}
+
+// BuiltIn is a catalog of system default values
+var BuiltIn Defaults
+
 /* Tables */
 // resourceSchema defines the schema for the resource table
 var resourceSchema = `
@@ -78,9 +96,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS ResourceName ON resource (name)`
 var userResourceRoleIXID = `
 CREATE UNIQUE INDEX IF NOT EXISTS UserResourceRoleID ON user_resource_role (userid, resourceid, roleid)`
 
-// adminID is the id of the default admin user
-var adminID = "bdldpjad2pm0cd64ra80"
-
 // defaultAdminUser is the insert statement that creates the default admin user - it requires 2 parameters:
 // - the id of the admin user
 // - the generated secrethash for the admin user's password
@@ -89,17 +104,12 @@ INSERT INTO
 	user(id, enabled, name, description, secrethash, created, createdby, updated, updatedby) 
 	values($1, true, "admin", "Default admin user", $2, now(), "system", now(), "system");`
 
-var systemResourceID = "bdldpjad2pm0cd64ra81"
-
 // defaultSystemResource is the insert statement that creates the default system resource - it requires 1 parameter:
 // - the id of the system resource
 var defaultSystemResource = `
 INSERT INTO 
 	resource(id, name, description, created, createdby, updated, updatedby) 
 	values($1, "system", "Default authsystem resource", now(), "system", now(), "system");`
-
-var systemAdminRoleID = "bdldpjad2pm0cd64ra82"
-var systemDelegateRoleID = "bdldpjad2pm0cd64ra83"
 
 // defaultAdminUser is the insert statement that creates the default system roles - it requires 3 parameters:
 // - the id of the system role
@@ -145,3 +155,14 @@ where
 	and user_resource_role.userid = $1
 	and user_resource_role.resourceid = $2  	
 `
+
+func init() {
+
+	//	Setup our defaults
+	BuiltIn = Defaults{
+		AdminUser:            "bdldpjad2pm0cd64ra80",
+		SystemResource:       "bdldpjad2pm0cd64ra81",
+		AdminRole:            "bdldpjad2pm0cd64ra82",
+		ResourceDelegateRole: "bdldpjad2pm0cd64ra83",
+	}
+}
