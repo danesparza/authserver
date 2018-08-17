@@ -20,20 +20,20 @@ type DBManager struct {
 }
 
 // NewDBManager creates a new instance of a SystemDB
-func NewDBManager(dbpath string) (*DBManager, error) {
+func NewDBManager(systemdbpath, tokendbpath string) (*DBManager, error) {
 	retval := new(DBManager)
 
 	//	Open the systemdb
-	db, err := sql.Open("ql", dbpath)
+	db, err := sql.Open("ql", systemdbpath)
 	if err != nil {
 		return nil, fmt.Errorf("An error occurred opening the SystemDB: %s", err)
 	}
 	retval.systemdb = db
 
 	//	Open the tokendb
-	tdb, err := sql.Open("ql", "token.db")
+	tdb, err := sql.Open("ql", tokendbpath)
 	if err != nil {
-		return nil, fmt.Errorf("An error occurred opening the SystemDB: %s", err)
+		return nil, fmt.Errorf("An error occurred opening the TokenDB: %s", err)
 	}
 	retval.tokendb = tdb
 

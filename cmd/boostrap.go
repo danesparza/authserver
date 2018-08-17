@@ -19,7 +19,7 @@ indices, admin user, and credentials.
 Running this more than once may result in errors`,
 	Run: func(cmd *cobra.Command, args []string) {
 		//	Spin up a SystemDB
-		db, err := data.NewDBManager(viper.GetString("datastore.system"))
+		db, err := data.NewDBManager(viper.GetString("datastore.system"), viper.GetString("datastore.tokens"))
 		if err != nil {
 			log.Printf("[ERROR] Error trying to open the system database: %s", err)
 			return

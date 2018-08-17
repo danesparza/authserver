@@ -9,22 +9,27 @@ import (
 
 func TestResource_Database_ShouldNotExistYet(t *testing.T) {
 	//	Arrange
-	filename := getTestFile()
+	systemdbfilename, tokendbfilename := getTestFiles()
 
 	//	Act
 
 	//	Assert
-	if _, err := os.Stat(filename); err == nil {
-		t.Errorf("System database file check failed: System file %s already exists, and shouldn't", filename)
+	if _, err := os.Stat(systemdbfilename); err == nil {
+		t.Errorf("System database file check failed: System db file %s already exists, and shouldn't", systemdbfilename)
+	}
+
+	if _, err := os.Stat(tokendbfilename); err == nil {
+		t.Errorf("Token database file check failed: Token db file %s already exists, and shouldn't", tokendbfilename)
 	}
 }
 
 func TestResource_Add_Successful(t *testing.T) {
 	//	Arrange
-	filename := getTestFile()
-	defer os.Remove(filename)
+	systemdbfilename, tokendbfilename := getTestFiles()
+	defer os.Remove(systemdbfilename)
+	defer os.Remove(tokendbfilename)
 
-	db, err := data.NewDBManager(filename)
+	db, err := data.NewDBManager(systemdbfilename, tokendbfilename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
@@ -65,10 +70,11 @@ func TestResource_Add_Successful(t *testing.T) {
 
 func TestResource_GetAllResources_NoItems_NoErrors(t *testing.T) {
 	//	Arrange
-	filename := getTestFile()
-	defer os.Remove(filename)
+	systemdbfilename, tokendbfilename := getTestFiles()
+	defer os.Remove(systemdbfilename)
+	defer os.Remove(tokendbfilename)
 
-	db, err := data.NewDBManager(filename)
+	db, err := data.NewDBManager(systemdbfilename, tokendbfilename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
@@ -95,10 +101,11 @@ func TestResource_GetAllResources_NoItems_NoErrors(t *testing.T) {
 
 func TestResource_GetAllResources_ItemsInDB_ReturnsItems(t *testing.T) {
 	//	Arrange
-	filename := getTestFile()
-	defer os.Remove(filename)
+	systemdbfilename, tokendbfilename := getTestFiles()
+	defer os.Remove(systemdbfilename)
+	defer os.Remove(tokendbfilename)
 
-	db, err := data.NewDBManager(filename)
+	db, err := data.NewDBManager(systemdbfilename, tokendbfilename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}

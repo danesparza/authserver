@@ -9,10 +9,11 @@ import (
 
 func TestGrants_GetGrantUserWithCredentials_ValidCredentials_Successful(t *testing.T) {
 	//	Arrange
-	filename := getTestFile()
-	defer os.Remove(filename)
+	systemdbfilename, tokendbfilename := getTestFiles()
+	defer os.Remove(systemdbfilename)
+	defer os.Remove(tokendbfilename)
 
-	db, err := data.NewDBManager(filename)
+	db, err := data.NewDBManager(systemdbfilename, tokendbfilename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
@@ -51,10 +52,11 @@ func TestGrants_GetGrantUserWithCredentials_ValidCredentials_Successful(t *testi
 
 func TestGrants_GetGrantUserWithCredentials_WrongCredentials_ReturnsError(t *testing.T) {
 	//	Arrange
-	filename := getTestFile()
-	defer os.Remove(filename)
+	systemdbfilename, tokendbfilename := getTestFiles()
+	defer os.Remove(systemdbfilename)
+	defer os.Remove(tokendbfilename)
 
-	db, err := data.NewDBManager(filename)
+	db, err := data.NewDBManager(systemdbfilename, tokendbfilename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}

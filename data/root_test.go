@@ -8,16 +8,17 @@ import (
 )
 
 //	Gets the database path for this environment:
-func getTestFile() string {
-	return "testdatabase.db"
+func getTestFiles() (string, string) {
+	return "testsystem.db", "testtoken.db"
 }
 
 func TestRoot_AuthSystemBootstrap_Successful(t *testing.T) {
 	//	Arrange
-	filename := getTestFile()
-	defer os.Remove(filename)
+	systemdbfilename, tokendbfilename := getTestFiles()
+	defer os.Remove(systemdbfilename)
+	defer os.Remove(tokendbfilename)
 
-	db, err := data.NewDBManager(filename)
+	db, err := data.NewDBManager(systemdbfilename, tokendbfilename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
