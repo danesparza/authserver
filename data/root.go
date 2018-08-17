@@ -173,6 +173,30 @@ func (store DBManager) AuthSystemBootstrap() (User, string, error) {
 		return adminUser, adminPassword, fmt.Errorf("Problem committing a transaction to bootstrap auth system")
 	}
 
+	//	Start our database transaction for the token database
+	tx, err = store.tokendb.Begin()
+	if err != nil {
+		return adminUser, adminPassword, fmt.Errorf("Problem starting a transaction to bootstrap auth tokens")
+	}
+
+	//	Token schema / indices
+	_, err = tx.Exec(tokenSchema)
+	if err != nil {
+		tx.Rollback()
+		return adminUser, adminPassword, fmt.Errorf("Problem adding token schema: %s", err)
+	}
+	_, err = tx.Exec(tokenIXToken)
+	if err != nil {
+		tx.Rollback()
+		return adminUser, adminPassword, fmt.Errorf("Problem adding token index: %s", err)
+	}
+
+	//	Commit our transaction for the token database
+	err = tx.Commit()
+	if err != nil {
+		return adminUser, adminPassword, fmt.Errorf("Problem committing a transaction to bootstrap auth tokens")
+	}
+
 	//	Get our admin user from the database and create our return object:
 	adminUser = User{}
 	err = store.systemdb.QueryRow("SELECT id, enabled, name, description, secrethash, created, createdby, updated, updatedby, deleted, deletedby FROM user WHERE id=$1;", BuiltIn.AdminUser).Scan(
