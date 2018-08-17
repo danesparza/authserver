@@ -24,7 +24,7 @@ type Role struct {
 }
 
 // AddRole adds a role to the system
-func (store SystemDB) AddRole(context User, role Role) (Role, error) {
+func (store DBManager) AddRole(context User, role Role) (Role, error) {
 	//	Our return item
 	retval := Role{}
 
@@ -35,7 +35,7 @@ func (store SystemDB) AddRole(context User, role Role) (Role, error) {
 	}
 
 	//	Start a transaction:
-	tx, err := store.db.Begin()
+	tx, err := store.systemdb.Begin()
 	if err != nil {
 		return retval, fmt.Errorf("An error occurred starting a transaction for a role: %s", err)
 	}
@@ -63,7 +63,7 @@ func (store SystemDB) AddRole(context User, role Role) (Role, error) {
 	}
 
 	//	Get the role
-	err = store.db.QueryRow(`select id, name, description, created, createdby, updated, updatedby, deleted, deletedby from role WHERE id=$1;`, roleID).Scan(
+	err = store.systemdb.QueryRow(`select id, name, description, created, createdby, updated, updatedby, deleted, deletedby from role WHERE id=$1;`, roleID).Scan(
 		&retval.ID,
 		&retval.Name,
 		&retval.Description,
@@ -83,11 +83,11 @@ func (store SystemDB) AddRole(context User, role Role) (Role, error) {
 }
 
 // GetAllRoles returns an array of all roles
-func (store SystemDB) GetAllRoles(context User) ([]Role, error) {
+func (store DBManager) GetAllRoles(context User) ([]Role, error) {
 	retval := []Role{}
 
 	//	Get all the items:
-	rows, err := store.db.Query("select id, name, description, created, createdby, updated, updatedby, deleted, deletedby from role")
+	rows, err := store.systemdb.Query("select id, name, description, created, createdby, updated, updatedby, deleted, deletedby from role")
 	if err != nil {
 		return retval, fmt.Errorf("Problem selecting all roles: %s", err)
 	}
@@ -121,11 +121,11 @@ func (store SystemDB) GetAllRoles(context User) ([]Role, error) {
 }
 
 // roleExists returns 'true' if the role can be found, 'false' if it can't be found
-func (store SystemDB) roleExists(role Role) bool {
+func (store DBManager) roleExists(role Role) bool {
 	retval := false
 
 	item := Role{}
-	err := store.db.QueryRow("SELECT id, name FROM role WHERE id=$1;", role.ID).Scan(
+	err := store.systemdb.QueryRow("SELECT id, name FROM role WHERE id=$1;", role.ID).Scan(
 		&item.ID,
 		&item.Name,
 	)

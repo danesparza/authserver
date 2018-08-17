@@ -12,7 +12,7 @@ func TestGrants_GetGrantUserWithCredentials_ValidCredentials_Successful(t *testi
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename)
+	db, err := data.NewDBManager(filename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
@@ -54,7 +54,7 @@ func TestGrants_GetGrantUserWithCredentials_WrongCredentials_ReturnsError(t *tes
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename)
+	db, err := data.NewDBManager(filename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}

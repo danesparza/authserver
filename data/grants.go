@@ -31,12 +31,12 @@ type GrantRole struct {
 }
 
 // GetUserGrantsWithCredentials - verifies credentials and returns the grantuser hierarchy
-func (store SystemDB) GetUserGrantsWithCredentials(name, secret string) (GrantUser, error) {
+func (store DBManager) GetUserGrantsWithCredentials(name, secret string) (GrantUser, error) {
 	retUser := GrantUser{}
 
 	//	First, find the user with the given name and get the hashed password
 	user := User{}
-	err := store.db.QueryRow("SELECT id, enabled, name, description, secrethash, created, createdby, updated, updatedby, deleted, deletedby FROM user WHERE name=$1;", name).Scan(
+	err := store.systemdb.QueryRow("SELECT id, enabled, name, description, secrethash, created, createdby, updated, updatedby, deleted, deletedby FROM user WHERE name=$1;", name).Scan(
 		&user.ID,
 		&user.Enabled,
 		&user.Name,
@@ -70,7 +70,7 @@ func (store SystemDB) GetUserGrantsWithCredentials(name, secret string) (GrantUs
 }
 
 // getUserGrants gets the grant hierarchy for a given user
-func (store SystemDB) getUserGrants(user User) (GrantUser, error) {
+func (store DBManager) getUserGrants(user User) (GrantUser, error) {
 
 	//	First, copy the necessary properties from the passed user
 	retval := GrantUser{
@@ -83,7 +83,7 @@ func (store SystemDB) getUserGrants(user User) (GrantUser, error) {
 	//	-- see what resources they have
 	//	-- see what roles they have on those resources
 	//	Build up the GrantUser hierarchy
-	rows, err := store.db.Query(getResourcesForUser, user.ID)
+	rows, err := store.systemdb.Query(getResourcesForUser, user.ID)
 	if err != nil {
 		return retval, fmt.Errorf("Problem getting resources for user %s / %v: %s", user.Name, user.ID, err)
 	}
@@ -100,7 +100,7 @@ func (store SystemDB) getUserGrants(user User) (GrantUser, error) {
 		}
 
 		//	Now that we have a resource, see what roles we should add to it for this user:
-		rolesrows, err := store.db.Query(getRolesForUserAndResources, user.ID, gres.ID)
+		rolesrows, err := store.systemdb.Query(getRolesForUserAndResources, user.ID, gres.ID)
 		if err != nil {
 			return retval, fmt.Errorf("Problem getting resources for user %s / %v: %s", user.Name, user.ID, err)
 		}

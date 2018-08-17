@@ -11,45 +11,55 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// SystemDB is the BoltDB database for
+// DBManager is the database manager for
 // user/application/role storage
-type SystemDB struct {
-	db *sql.DB
-}
-
-// TokenDB is the BoltDB database for
 // token storage
-type TokenDB struct {
-	db *sql.DB
+type DBManager struct {
+	systemdb *sql.DB
+	tokendb  *sql.DB
 }
 
-// NewSystemDB creates a new instance of a SystemDB
-func NewSystemDB(dbpath string) (*SystemDB, error) {
-	retval := new(SystemDB)
+// NewDBManager creates a new instance of a SystemDB
+func NewDBManager(dbpath string) (*DBManager, error) {
+	retval := new(DBManager)
 
-	//	Create a reference to our bolt db
+	//	Open the systemdb
 	db, err := sql.Open("ql", dbpath)
 	if err != nil {
 		return nil, fmt.Errorf("An error occurred opening the SystemDB: %s", err)
 	}
-	retval.db = db
+	retval.systemdb = db
+
+	//	Open the tokendb
+	tdb, err := sql.Open("ql", "token.db")
+	if err != nil {
+		return nil, fmt.Errorf("An error occurred opening the SystemDB: %s", err)
+	}
+	retval.tokendb = tdb
 
 	//	Return our systemdb reference
 	return retval, nil
 }
 
 // Close closes the SystemDB database
-func (store SystemDB) Close() error {
-	return store.db.Close()
+func (store DBManager) Close() error {
+	syserr := store.systemdb.Close()
+	tokerr := store.tokendb.Close()
+
+	if syserr != nil || tokerr != nil {
+		return fmt.Errorf("An error occurred closing the dbmanager.  Syserr: %s / Tokerr: %s", syserr, tokerr)
+	}
+
+	return nil
 }
 
 // AuthSystemBootstrap initializes the SystemDB and creates any default admin users / roles / resources
-func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
+func (store DBManager) AuthSystemBootstrap() (User, string, error) {
 	adminUser := User{}
 	adminPassword := ""
 
 	//	Start our database transaction
-	tx, err := store.db.Begin()
+	tx, err := store.systemdb.Begin()
 	if err != nil {
 		return adminUser, adminPassword, fmt.Errorf("Problem starting a transaction to bootstrap auth system")
 	}
@@ -165,7 +175,7 @@ func (store SystemDB) AuthSystemBootstrap() (User, string, error) {
 
 	//	Get our admin user from the database and create our return object:
 	adminUser = User{}
-	err = store.db.QueryRow("SELECT id, enabled, name, description, secrethash, created, createdby, updated, updatedby, deleted, deletedby FROM user WHERE id=$1;", BuiltIn.AdminUser).Scan(
+	err = store.systemdb.QueryRow("SELECT id, enabled, name, description, secrethash, created, createdby, updated, updatedby, deleted, deletedby FROM user WHERE id=$1;", BuiltIn.AdminUser).Scan(
 		&adminUser.ID,
 		&adminUser.Enabled,
 		&adminUser.Name,

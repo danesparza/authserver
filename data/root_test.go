@@ -17,7 +17,7 @@ func TestRoot_AuthSystemBootstrap_Successful(t *testing.T) {
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename)
+	db, err := data.NewDBManager(filename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}

@@ -24,7 +24,7 @@ func TestUser_AddUser_Successful(t *testing.T) {
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename)
+	db, err := data.NewDBManager(filename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
@@ -75,7 +75,7 @@ func TestUser_AddDuplicateUser_ReturnsError(t *testing.T) {
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename)
+	db, err := data.NewDBManager(filename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
@@ -127,7 +127,7 @@ func TestUser_GetAllUsers_NoItems_NoErrors(t *testing.T) {
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename)
+	db, err := data.NewDBManager(filename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
@@ -164,7 +164,7 @@ func TestUser_GetAllUsers_ItemsInDB_ReturnsItems(t *testing.T) {
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename)
+	db, err := data.NewDBManager(filename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
@@ -225,7 +225,7 @@ func TestUser_AddUser_NoCredentials_ReturnsError(t *testing.T) {
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename)
+	db, err := data.NewDBManager(filename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
@@ -271,7 +271,7 @@ func TestUser_AddUser_ValidCredentials_Successful(t *testing.T) {
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename)
+	db, err := data.NewDBManager(filename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}
@@ -324,7 +324,7 @@ func TestUser_AddUser_NewResourceAndRole_Successful(t *testing.T) {
 	filename := getTestFile()
 	defer os.Remove(filename)
 
-	db, err := data.NewSystemDB(filename)
+	db, err := data.NewDBManager(filename)
 	if err != nil {
 		t.Errorf("NewSystemDB failed: %s", err)
 	}

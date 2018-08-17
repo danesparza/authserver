@@ -46,7 +46,7 @@ type UserResourceRole struct {
 }
 
 // AddUser adds a user to the system
-func (store SystemDB) AddUser(context User, user User, userPassword string) (User, error) {
+func (store DBManager) AddUser(context User, user User, userPassword string) (User, error) {
 	//	Our return item
 	retval := User{}
 
@@ -66,7 +66,7 @@ func (store SystemDB) AddUser(context User, user User, userPassword string) (Use
 	userID := xid.New().String()
 
 	//	Start a transaction:
-	tx, err := store.db.Begin()
+	tx, err := store.systemdb.Begin()
 	if err != nil {
 		return retval, fmt.Errorf("An error occurred starting a transaction for a user: %s", err)
 	}
@@ -92,7 +92,7 @@ func (store SystemDB) AddUser(context User, user User, userPassword string) (Use
 	}
 
 	//	Get the user
-	err = store.db.QueryRow("SELECT id, enabled, name, description, secrethash, created, createdby, updated, updatedby, deleted, deletedby FROM user WHERE id=$1;", userID).Scan(
+	err = store.systemdb.QueryRow("SELECT id, enabled, name, description, secrethash, created, createdby, updated, updatedby, deleted, deletedby FROM user WHERE id=$1;", userID).Scan(
 		&retval.ID,
 		&retval.Enabled,
 		&retval.Name,
@@ -114,11 +114,11 @@ func (store SystemDB) AddUser(context User, user User, userPassword string) (Use
 }
 
 // GetAllUsers returns an array of all users
-func (store SystemDB) GetAllUsers(context User) ([]User, error) {
+func (store DBManager) GetAllUsers(context User) ([]User, error) {
 	retval := []User{}
 
 	//	Get all the items:
-	rows, err := store.db.Query("SELECT id, enabled, name, description, secrethash, created, createdby, updated, updatedby, deleted, deletedby FROM user")
+	rows, err := store.systemdb.Query("SELECT id, enabled, name, description, secrethash, created, createdby, updated, updatedby, deleted, deletedby FROM user")
 	if err != nil {
 		return retval, fmt.Errorf("Problem selecting all users: %s", err)
 	}
@@ -154,14 +154,14 @@ func (store SystemDB) GetAllUsers(context User) ([]User, error) {
 }
 
 // userIsSystemAdmin returns 'true' if the passed user is a system admin
-func (store SystemDB) userIsSystemAdmin(userID string) bool {
+func (store DBManager) userIsSystemAdmin(userID string) bool {
 	retval := false
 
 	urr := UserResourceRole{}
 
 	//	Create the base query and suffix:
 	query := "SELECT userid, resourceid, roleid, created, createdby, updated, updatedby, deleted, deletedby FROM user_resource_role WHERE userid=$1 and resourceid = $2 and roleid = $3;"
-	err := store.db.QueryRow(query, userID, BuiltIn.SystemResource, BuiltIn.AdminRole).Scan(
+	err := store.systemdb.QueryRow(query, userID, BuiltIn.SystemResource, BuiltIn.AdminRole).Scan(
 		&urr.UserID,
 		&urr.ResourceID,
 		&urr.RoleID,
@@ -183,14 +183,14 @@ func (store SystemDB) userIsSystemAdmin(userID string) bool {
 }
 
 // userIsResourceDelegate returns 'true' if the passed user is a resource delegate
-func (store SystemDB) userIsResourceDelegate(userID string) bool {
+func (store DBManager) userIsResourceDelegate(userID string) bool {
 	retval := false
 
 	urr := UserResourceRole{}
 
 	//	Create the base query and suffix:
 	query := "SELECT userid, resourceid, roleid, created, createdby, updated, updatedby, deleted, deletedby FROM user_resource_role WHERE userid=$1 and roleid = $2;"
-	err := store.db.QueryRow(query, userID, BuiltIn.ResourceDelegateRole).Scan(
+	err := store.systemdb.QueryRow(query, userID, BuiltIn.ResourceDelegateRole).Scan(
 		&urr.UserID,
 		&urr.ResourceID,
 		&urr.RoleID,
@@ -212,7 +212,7 @@ func (store SystemDB) userIsResourceDelegate(userID string) bool {
 }
 
 // userHasResourceRole returns 'true' if a given user has a given resource role, false if they don't
-func (store SystemDB) userHasResourceRole(userID, resourceID string, roleIDs ...string) bool {
+func (store DBManager) userHasResourceRole(userID, resourceID string, roleIDs ...string) bool {
 	retval := false
 
 	//	Sanity check -- there needs to be at least one item in roleIDs
@@ -247,7 +247,7 @@ func (store SystemDB) userHasResourceRole(userID, resourceID string, roleIDs ...
 	//	Append our suffix
 	query = query + strings.Join(queryroles, " or ") + querySuffix
 
-	err := store.db.QueryRow(query, qrargs...).Scan(
+	err := store.systemdb.QueryRow(query, qrargs...).Scan(
 		&urr.UserID,
 		&urr.ResourceID,
 		&urr.RoleID,
@@ -270,7 +270,7 @@ func (store SystemDB) userHasResourceRole(userID, resourceID string, roleIDs ...
 
 // AddUserToResourceWithRole adds the specified user to the resource and assigns the given role.
 // Returns an error if the user, resource, or role don't already exist
-func (store SystemDB) AddUserToResourceWithRole(context, user User, resource Resource, role Role) (UserResourceRole, error) {
+func (store DBManager) AddUserToResourceWithRole(context, user User, resource Resource, role Role) (UserResourceRole, error) {
 
 	//	Our return item
 	retval := UserResourceRole{}
@@ -290,7 +290,7 @@ func (store SystemDB) AddUserToResourceWithRole(context, user User, resource Res
 	//	If they all exist, then add the item in the system...
 
 	//	Start a transaction:
-	tx, err := store.db.Begin()
+	tx, err := store.systemdb.Begin()
 	if err != nil {
 		return retval, fmt.Errorf("An error occurred starting a transaction for a user/resource/role: %s", err)
 	}
@@ -316,7 +316,7 @@ func (store SystemDB) AddUserToResourceWithRole(context, user User, resource Res
 	}
 
 	//	Get the user/resource/role
-	err = store.db.QueryRow("SELECT userid, resourceid, roleid, created, createdby, updated, updatedby, deleted, deletedby FROM user_resource_role WHERE userid=$1 and resourceid=$2 and roleid=$3;", user.ID, resource.ID, role.ID).Scan(
+	err = store.systemdb.QueryRow("SELECT userid, resourceid, roleid, created, createdby, updated, updatedby, deleted, deletedby FROM user_resource_role WHERE userid=$1 and resourceid=$2 and roleid=$3;", user.ID, resource.ID, role.ID).Scan(
 		&retval.UserID,
 		&retval.ResourceID,
 		&retval.RoleID,
@@ -336,11 +336,11 @@ func (store SystemDB) AddUserToResourceWithRole(context, user User, resource Res
 }
 
 // userExists returns 'true' if the user can be found, 'false' if it can't be found
-func (store SystemDB) userExists(user User) bool {
+func (store DBManager) userExists(user User) bool {
 	retval := false
 
 	item := User{}
-	err := store.db.QueryRow("SELECT id, name FROM user WHERE id=$1;", user.ID).Scan(
+	err := store.systemdb.QueryRow("SELECT id, name FROM user WHERE id=$1;", user.ID).Scan(
 		&item.ID,
 		&item.Name,
 	)

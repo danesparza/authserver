@@ -24,7 +24,7 @@ type Resource struct {
 }
 
 // AddResource adds a resource to the system
-func (store SystemDB) AddResource(context User, resource Resource) (Resource, error) {
+func (store DBManager) AddResource(context User, resource Resource) (Resource, error) {
 	//	Our return item
 	retval := Resource{}
 
@@ -35,7 +35,7 @@ func (store SystemDB) AddResource(context User, resource Resource) (Resource, er
 	}
 
 	//	Start a transaction:
-	tx, err := store.db.Begin()
+	tx, err := store.systemdb.Begin()
 	if err != nil {
 		return retval, fmt.Errorf("An error occurred starting a transaction for a resource: %s", err)
 	}
@@ -63,7 +63,7 @@ func (store SystemDB) AddResource(context User, resource Resource) (Resource, er
 	}
 
 	//	Get the resource
-	err = store.db.QueryRow(`SELECT id, name, description, created, createdby, updated, updatedby, deleted, deletedby FROM resource WHERE id=$1;`, resourceID).Scan(
+	err = store.systemdb.QueryRow(`SELECT id, name, description, created, createdby, updated, updatedby, deleted, deletedby FROM resource WHERE id=$1;`, resourceID).Scan(
 		&retval.ID,
 		&retval.Name,
 		&retval.Description,
@@ -83,11 +83,11 @@ func (store SystemDB) AddResource(context User, resource Resource) (Resource, er
 }
 
 // GetAllResources returns an array of all resources
-func (store SystemDB) GetAllResources(context User) ([]Resource, error) {
+func (store DBManager) GetAllResources(context User) ([]Resource, error) {
 	retval := []Resource{}
 
 	//	Get all the items:
-	rows, err := store.db.Query("select * from resource")
+	rows, err := store.systemdb.Query("select * from resource")
 	if err != nil {
 		return retval, fmt.Errorf("Problem selecting all resources: %s", err)
 	}
@@ -121,11 +121,11 @@ func (store SystemDB) GetAllResources(context User) ([]Resource, error) {
 }
 
 // resourceExists returns 'true' if the resource can be found, 'false' if it can't be found
-func (store SystemDB) resourceExists(resource Resource) bool {
+func (store DBManager) resourceExists(resource Resource) bool {
 	retval := false
 
 	item := Resource{}
-	err := store.db.QueryRow("SELECT id, name FROM resource WHERE id=$1", resource.ID).Scan(
+	err := store.systemdb.QueryRow("SELECT id, name FROM resource WHERE id=$1", resource.ID).Scan(
 		&item.ID,
 		&item.Name,
 	)
