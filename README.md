@@ -5,7 +5,7 @@ Why reimplement an OAuth authorization serice in your app if you don't have to?
 
 ## Quick start
 
-* Make sure you have a TLS cert & key for your machine.  If you need one for local development / testing, use [tls-keygen](https://www.npmjs.com/package/tls-keygen).  
+* Make sure you have a TLS cert & key for your machine.  If you need one for local development / testing, use [mkcert](https://github.com/FiloSottile/mkcert).  
 * Generate a configuration file using `authserver config create > authserver.yml`
 * Update the config file with your specific settings.
 * Bootstrap the system using `authserver bootstrap`.  This will create the admin password for your system and display it.  Please make a note of it -- you'll only see it once.
