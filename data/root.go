@@ -185,7 +185,14 @@ func (store DBManager) AuthSystemBootstrap() (User, string, error) {
 		tx.Rollback()
 		return adminUser, adminPassword, fmt.Errorf("Problem adding token schema: %s", err)
 	}
+
 	_, err = tx.Exec(tokenIXToken)
+	if err != nil {
+		tx.Rollback()
+		return adminUser, adminPassword, fmt.Errorf("Problem adding token index: %s", err)
+	}
+
+	_, err = tx.Exec(tokenIXUserID)
 	if err != nil {
 		tx.Rollback()
 		return adminUser, adminPassword, fmt.Errorf("Problem adding token index: %s", err)

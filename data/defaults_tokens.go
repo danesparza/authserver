@@ -7,7 +7,6 @@ CREATE TABLE IF NOT EXISTS tokens (
 	token string NOT NULL,
 	userid string NOT NULL,
 	created time NOT NULL,
-	createdby string NOT NULL,
 	expires time NOT NULL,
 	deleted time,
 	deletedby string
@@ -15,4 +14,7 @@ CREATE TABLE IF NOT EXISTS tokens (
 
 /* Indices */
 var tokenIXToken = `
-CREATE UNIQUE INDEX IF NOT EXISTS Token ON tokens (token)`
+CREATE UNIQUE INDEX IF NOT EXISTS TokenID ON tokens (token)`
+
+var tokenIXUserID = `
+CREATE INDEX IF NOT EXISTS TokenUser ON tokens (userid)`
