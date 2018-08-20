@@ -71,3 +71,61 @@ func (store DBManager) GetNewToken(user User, expiresafter time.Duration) (Token
 	//	Return the token
 	return retval, nil
 }
+
+// getTokenInfo returns token information for a given unexpired tokenID (or an error if it can't be found)
+func (store DBManager) getTokenInfo(tokenID string) (Token, error) {
+
+	retval := Token{}
+
+	//	Get the token (as long as it's not expired)
+	err := store.tokendb.QueryRow(`SELECT 
+	token, userid, created, expires, deleted, deletedby 
+	FROM tokens 
+	WHERE token=$1 and expires > now();`, tokenID).Scan(
+		&retval.ID,
+		&retval.UserID,
+		&retval.Created,
+		&retval.Expires,
+		&retval.Deleted,
+		&retval.DeletedBy,
+	)
+	if err != nil {
+		return retval, fmt.Errorf("Problem selecting token: %s", err)
+	}
+
+	//	Return what we found:
+	return retval, nil
+}
+
+// GetGrantsForToken gets Grant information for a given token
+func (store DBManager) GetGrantsForToken(tokenID string) (GrantUser, error) {
+
+	//	Create our default return value
+	retval := GrantUser{}
+
+	//	First, get the userid for the given token
+	tokenInfo, err := store.getTokenInfo(tokenID)
+
+	if err != nil {
+		return retval, fmt.Errorf("There was a problem getting token information for the token: %s", err)
+	}
+
+	//	Then get the user information for the given userID:
+	userInfo, err := store.getUserForUserID(tokenInfo.UserID)
+
+	if err != nil {
+		return retval, fmt.Errorf("There was a problem getting user information for the token: %s", err)
+	}
+
+	//	Next, get the grant information for the given userid
+	grantInfo, err := store.getUserGrants(userInfo)
+
+	if err != nil {
+		return retval, fmt.Errorf("There was a problem getting grant information for the token: %s", err)
+	}
+
+	retval = grantInfo
+
+	//	Return the grant information
+	return retval, nil
+}

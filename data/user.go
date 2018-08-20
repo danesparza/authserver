@@ -353,3 +353,29 @@ func (store DBManager) userExists(user User) bool {
 
 	return retval
 }
+
+// getUserForUserID returns the user information for the given userID
+func (store DBManager) getUserForUserID(userID string) (User, error) {
+	item := User{}
+
+	err := store.systemdb.QueryRow(`SELECT 
+		id, enabled, name, description, created, createdby, updated, updatedby, deleted, deletedby 
+		FROM user 
+		WHERE id=$1;`, userID).Scan(
+		&item.ID,
+		&item.Enabled,
+		&item.Name,
+		&item.Description,
+		&item.Created,
+		&item.CreatedBy,
+		&item.Updated,
+		&item.UpdatedBy,
+		&item.Deleted,
+		&item.DeletedBy,
+	)
+	if err != nil {
+		return item, fmt.Errorf("There was an error getting the user: %s", err)
+	}
+
+	return item, nil
+}
