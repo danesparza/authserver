@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/danesparza/authserver/api"
+	"github.com/danesparza/authserver/data"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/spf13/cobra"
@@ -31,7 +32,16 @@ func start(cmd *cobra.Command, args []string) {
 	UIRouter.HandleFunc("/", api.ShowUI)
 
 	//	Setup our Service routes
+	db, err := data.NewDBManager(viper.GetString("datastore.system"), viper.GetString("datastore.tokens"))
+	if err != nil {
+		log.Printf("[ERROR] Error trying to open the system database: %s", err)
+		return
+	}
+	defer db.Close()
+
+	apiService := api.Service{DB: db}
 	ServiceRouter.HandleFunc("/", api.HelloWorld)
+	ServiceRouter.HandleFunc("/token/client", apiService.ClientCredentialsGrant).Methods("POST")
 
 	//	Setup the CORS options:
 	log.Printf("[INFO] Allowed CORS origins: %s\n", viper.GetString("apiservice.allowed-origins"))
@@ -79,14 +89,4 @@ func start(cmd *cobra.Command, args []string) {
 
 func init() {
 	rootCmd.AddCommand(startCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// startCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// startCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
