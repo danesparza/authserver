@@ -43,7 +43,7 @@ func start(cmd *cobra.Command, args []string) {
 	//	Setup our Service routes
 	ServiceRouter.HandleFunc("/", api.HelloWorld)
 	ServiceRouter.HandleFunc("/token/client", apiService.ClientCredentialsGrant).Methods("POST")
-	ServiceRouter.HandleFunc("/user", apiService.ClientCredentialsGrant).Methods("GET")
+	ServiceRouter.HandleFunc("/user", apiService.ScopesForUserID).Methods("GET")
 
 	//	Setup the CORS options:
 	log.Printf("[INFO] Allowed CORS origins: %s\n", viper.GetString("apiservice.allowed-origins"))

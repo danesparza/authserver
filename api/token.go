@@ -54,14 +54,14 @@ func (service Service) ClientCredentialsGrant(rw http.ResponseWriter, req *http.
 	}
 
 	//	Send the request to the datamanager and get grant information for the given credentials:
-	grantInfo, err := service.DB.GetUserScopesWithCredentials(request.ClientID, request.ClientSecret)
+	scopeUser, err := service.DB.GetUserScopesWithCredentials(request.ClientID, request.ClientSecret)
 	if err != nil {
 		sendErrorResponse(rw, err, http.StatusUnauthorized)
 		return
 	}
 
 	//	Get a token for the returned user information
-	token, err := service.DB.GetNewToken(data.User{ID: grantInfo.ID}, 1*time.Hour)
+	token, err := service.DB.GetNewToken(data.User{ID: scopeUser.ID}, 1*time.Hour)
 	if err != nil {
 		sendErrorResponse(rw, err, http.StatusUnauthorized)
 		return
@@ -80,9 +80,9 @@ func (service Service) ClientCredentialsGrant(rw http.ResponseWriter, req *http.
 	json.NewEncoder(rw).Encode(response)
 }
 
-// GrantsForUserID gets the grant information for the userID passed in the url
+// ScopesForUserID gets the scope information for the userID passed in the url
 // REQUIRES: valid bearer token
-func (service Service) GrantsForUserID(rw http.ResponseWriter, req *http.Request) {
+func (service Service) ScopesForUserID(rw http.ResponseWriter, req *http.Request) {
 	//	req.Body is a ReadCloser -- we need to remember to close it:
 	defer req.Body.Close()
 
@@ -91,14 +91,14 @@ func (service Service) GrantsForUserID(rw http.ResponseWriter, req *http.Request
 
 	//	If the auth header wasn't supplied, return an error
 	if authHeaderValid(authHeader) != true {
-		sendErrorResponse(rw, fmt.Errorf("Access denied: Bearer token was not supplied"), http.StatusUnauthorized)
+		sendErrorResponse(rw, fmt.Errorf("Bearer token was not supplied"), http.StatusUnauthorized)
 		return
 	}
 
 	//	Get just the bearer token itself:
 	token := authHeader
 
-	//	Send the request to the datamanager and get grant information for the given credentials:
+	//	Send the request to the datamanager and get scope information for the given credentials:
 	response, err := service.DB.GetScopesForToken(token)
 	if err != nil {
 		sendErrorResponse(rw, err, http.StatusUnauthorized)
