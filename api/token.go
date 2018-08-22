@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/danesparza/authserver/data"
@@ -96,7 +97,7 @@ func (service Service) ScopesForUserID(rw http.ResponseWriter, req *http.Request
 	}
 
 	//	Get just the bearer token itself:
-	token := authHeader
+	token := getTokenFromAuthHeader(authHeader)
 
 	//	Send the request to the datamanager and get scope information for the given credentials:
 	response, err := service.DB.GetScopesForToken(token)
@@ -113,7 +114,46 @@ func (service Service) ScopesForUserID(rw http.ResponseWriter, req *http.Request
 // authHeaderValid returns true if the passed header value is a valid
 // for a "bearer token" authorization field -- otherwise return false
 func authHeaderValid(header string) bool {
-	retval := false
+	retval := true
+
+	//	If we don't have at least x number characters,
+	//	it must not include the prefix text 'Bearer '
+	if len(header) < len("Bearer ") {
+		return false
+	}
+
+	//	If the first part of the string isn't 'Bearer ' then it's not a bearer token...
+	if strings.EqualFold(header[:len("Bearer ")], "Bearer ") != true {
+		return false
+	}
+
+	return retval
+}
+
+// getTokenFromAuthHeader returns the token itself from the Authorization header
+func getTokenFromAuthHeader(header string) string {
+	retval := ""
+
+	//	If we don't have at least x number characters,
+	//	it must not include the prefix text 'Bearer '
+	if len(header) < len("Bearer ") {
+		return ""
+	}
+
+	//	If the first part of the string isn't 'Bearer ' then it's not a bearer token...
+	if strings.EqualFold(header[:len("Bearer ")], "Bearer ") != true {
+		return ""
+	}
+
+	//	Get the token and decode it
+	encodedToken := header[len("Bearer "):]
+	tokenBytes, err := base64.StdEncoding.DecodeString(encodedToken)
+	if err != nil {
+		return ""
+	}
+
+	//	Change the type to string
+	retval = string(tokenBytes)
 
 	return retval
 }
