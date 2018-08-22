@@ -24,6 +24,15 @@ var startCmd = &cobra.Command{
 
 func start(cmd *cobra.Command, args []string) {
 
+	//	Create a DBManager object and associate with the api.Service
+	db, err := data.NewDBManager(viper.GetString("datastore.system"), viper.GetString("datastore.tokens"))
+	if err != nil {
+		log.Printf("[ERROR] Error trying to open the system database: %s", err)
+		return
+	}
+	defer db.Close()
+	apiService := api.Service{DB: db}
+
 	//	Create a router and setup our REST endpoints...
 	UIRouter := mux.NewRouter()
 	ServiceRouter := mux.NewRouter()
@@ -32,16 +41,9 @@ func start(cmd *cobra.Command, args []string) {
 	UIRouter.HandleFunc("/", api.ShowUI)
 
 	//	Setup our Service routes
-	db, err := data.NewDBManager(viper.GetString("datastore.system"), viper.GetString("datastore.tokens"))
-	if err != nil {
-		log.Printf("[ERROR] Error trying to open the system database: %s", err)
-		return
-	}
-	defer db.Close()
-
-	apiService := api.Service{DB: db}
 	ServiceRouter.HandleFunc("/", api.HelloWorld)
 	ServiceRouter.HandleFunc("/token/client", apiService.ClientCredentialsGrant).Methods("POST")
+	ServiceRouter.HandleFunc("/user", apiService.ClientCredentialsGrant).Methods("GET")
 
 	//	Setup the CORS options:
 	log.Printf("[INFO] Allowed CORS origins: %s\n", viper.GetString("apiservice.allowed-origins"))

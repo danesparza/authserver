@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -67,13 +68,52 @@ func (service Service) ClientCredentialsGrant(rw http.ResponseWriter, req *http.
 	}
 
 	//	Create our response and send information back:
+	encodedToken := base64.StdEncoding.EncodeToString([]byte(token.ID))
 	response := AuthResponse{
 		TokenType:   "Bearer",
 		ExpiresIn:   strconv.FormatFloat(token.Expires.Sub(time.Now()).Seconds(), 'f', 0, 64),
-		AccessToken: token.ID,
+		AccessToken: encodedToken,
 	}
 
 	//	Serialize to JSON & return the response:
 	rw.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(rw).Encode(response)
+}
+
+// GrantsForUserID gets the grant information for the userID passed in the url
+// REQUIRES: valid bearer token
+func (service Service) GrantsForUserID(rw http.ResponseWriter, req *http.Request) {
+	//	req.Body is a ReadCloser -- we need to remember to close it:
+	defer req.Body.Close()
+
+	//	Get the authorization header:
+	authHeader := req.Header.Get("Authorization")
+
+	//	If the auth header wasn't supplied, return an error
+	if authHeaderValid(authHeader) != true {
+		sendErrorResponse(rw, fmt.Errorf("Access denied: Bearer token was not supplied"), http.StatusUnauthorized)
+		return
+	}
+
+	//	Get just the bearer token itself:
+	token := authHeader
+
+	//	Send the request to the datamanager and get grant information for the given credentials:
+	response, err := service.DB.GetGrantsForToken(token)
+	if err != nil {
+		sendErrorResponse(rw, err, http.StatusUnauthorized)
+		return
+	}
+
+	//	Serialize to JSON & return the response:
+	rw.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(rw).Encode(response)
+}
+
+// authHeaderValid returns true if the passed header value is a valid
+// for a "bearer token" authorization field -- otherwise return false
+func authHeaderValid(header string) bool {
+	retval := false
+
+	return retval
 }
