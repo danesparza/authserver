@@ -20,8 +20,8 @@ var (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "authserver",
-	Short: "A service to manage, issue and validate OAuth2 grants",
-	Long: `A service to manage, issue and validate OAuth2 grants.
+	Short: "A service to manage, issue and validate OAuth2 tokens",
+	Long: `A service to manage, issue and validate OAuth2 tokens.
 	
 The service has a management UI, an API layer, and OAuth2 helper methods`,
 }

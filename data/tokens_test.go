@@ -57,7 +57,7 @@ func TestToken_GetNewToken_ValidUserAndExpiresafter_Successful(t *testing.T) {
 
 }
 
-func TestToken_GetGrantsForToken_ValidToken_Successful(t *testing.T) {
+func TestToken_GetScopesForToken_ValidToken_Successful(t *testing.T) {
 	//	Arrange
 	systemdbfilename, tokendbfilename := getTestFiles()
 	defer os.Remove(systemdbfilename)
@@ -100,15 +100,15 @@ func TestToken_GetGrantsForToken_ValidToken_Successful(t *testing.T) {
 	}
 
 	//	Act
-	grantInfo, err := db.GetGrantsForToken(tokenResponse.ID)
+	scopeInfo, err := db.GetScopesForToken(tokenResponse.ID)
 
 	//	Assert
 	if err != nil {
-		t.Errorf("GetGrantsForToken failed: Should have gotten grant information without an error, but got: %s", err)
+		t.Errorf("GetScopesForToken failed: Should have gotten scope information without an error, but got: %s", err)
 	}
 
-	if len(grantInfo.GrantResources) != 1 {
-		t.Errorf("GetGrantsForToken failed: Should have gotten 1 grant resource, but got: %v instead", len(grantInfo.GrantResources))
+	if len(scopeInfo.ScopeResources) != 1 {
+		t.Errorf("GetScopesForToken failed: Should have gotten 1 scope resource, but got: %v instead", len(scopeInfo.ScopeResources))
 	}
 
 }

@@ -6,33 +6,33 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// GrantUser is a hierarchy of a user and the resource and role
-// grants they have been assigned
-type GrantUser struct {
+// ScopeUser is a hierarchy of a user and the resource and role
+// scopes they have been assigned
+type ScopeUser struct {
 	ID             string
 	Name           string
 	Description    string
-	GrantResources []GrantResource
+	ScopeResources []ScopeResource
 }
 
-// GrantResource is part of the user/resource/role grant hierarchy
-type GrantResource struct {
+// ScopeResource is part of the user/resource/role scope hierarchy
+type ScopeResource struct {
 	ID          string
 	Name        string
 	Description string
-	GrantRoles  []GrantRole
+	ScopeRoles  []ScopeRole
 }
 
-// GrantRole is part of the user/resource/role grant hierarchy
-type GrantRole struct {
+// ScopeRole is part of the user/resource/role scope hierarchy
+type ScopeRole struct {
 	ID          string
 	Name        string
 	Description string
 }
 
-// GetUserGrantsWithCredentials - verifies credentials and returns the grantuser hierarchy
-func (store DBManager) GetUserGrantsWithCredentials(name, secret string) (GrantUser, error) {
-	retUser := GrantUser{}
+// GetUserScopesWithCredentials - verifies credentials and returns the scopeuser hierarchy
+func (store DBManager) GetUserScopesWithCredentials(name, secret string) (ScopeUser, error) {
+	retUser := ScopeUser{}
 
 	//	First, find the user with the given name and get the hashed password
 	user := User{}
@@ -59,21 +59,21 @@ func (store DBManager) GetUserGrantsWithCredentials(name, secret string) (GrantU
 		return retUser, fmt.Errorf("The user was not found or the password was incorrect")
 	}
 
-	//	If everything checks out, get the grantuser information and return it:
-	retUser, err = store.getUserGrants(user)
+	//	If everything checks out, get the scopeuser information and return it:
+	retUser, err = store.getUserScopes(user)
 	if err != nil {
-		return retUser, fmt.Errorf("Problem fetching grants for the user: %s", err)
+		return retUser, fmt.Errorf("Problem fetching scopes for the user: %s", err)
 	}
 
 	//	Return our user:
 	return retUser, nil
 }
 
-// getUserGrants gets the grant hierarchy for a given user
-func (store DBManager) getUserGrants(user User) (GrantUser, error) {
+// getUserScopes gets the scope hierarchy for a given user
+func (store DBManager) getUserScopes(user User) (ScopeUser, error) {
 
 	//	First, copy the necessary properties from the passed user
-	retval := GrantUser{
+	retval := ScopeUser{
 		ID:          user.ID,
 		Name:        user.Name,
 		Description: user.Description,
@@ -82,14 +82,14 @@ func (store DBManager) getUserGrants(user User) (GrantUser, error) {
 	//	Next, look in the user_resource_role table:
 	//	-- see what resources they have
 	//	-- see what roles they have on those resources
-	//	Build up the GrantUser hierarchy
+	//	Build up the ScopeUser hierarchy
 	rows, err := store.systemdb.Query(getResourcesForUser, user.ID)
 	if err != nil {
 		return retval, fmt.Errorf("Problem getting resources for user %s / %v: %s", user.Name, user.ID, err)
 	}
 
 	for rows.Next() {
-		gres := GrantResource{}
+		gres := ScopeResource{}
 
 		if err = rows.Scan(
 			&gres.ID,
@@ -106,7 +106,7 @@ func (store DBManager) getUserGrants(user User) (GrantUser, error) {
 		}
 
 		for rolesrows.Next() {
-			grole := GrantRole{}
+			grole := ScopeRole{}
 
 			if err = rolesrows.Scan(
 				&grole.ID,
@@ -116,7 +116,7 @@ func (store DBManager) getUserGrants(user User) (GrantUser, error) {
 				break
 			}
 
-			gres.GrantRoles = append(gres.GrantRoles, grole)
+			gres.ScopeRoles = append(gres.ScopeRoles, grole)
 
 		}
 
@@ -124,7 +124,7 @@ func (store DBManager) getUserGrants(user User) (GrantUser, error) {
 			return retval, fmt.Errorf("Problem scanning roles for user %s / %v & resource %s / %v: %s", user.Name, user.ID, gres.Name, gres.ID, err)
 		}
 
-		retval.GrantResources = append(retval.GrantResources, gres)
+		retval.ScopeResources = append(retval.ScopeResources, gres)
 	}
 
 	if err = rows.Err(); err != nil {

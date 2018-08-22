@@ -54,7 +54,7 @@ func (service Service) ClientCredentialsGrant(rw http.ResponseWriter, req *http.
 	}
 
 	//	Send the request to the datamanager and get grant information for the given credentials:
-	grantInfo, err := service.DB.GetUserGrantsWithCredentials(request.ClientID, request.ClientSecret)
+	grantInfo, err := service.DB.GetUserScopesWithCredentials(request.ClientID, request.ClientSecret)
 	if err != nil {
 		sendErrorResponse(rw, err, http.StatusUnauthorized)
 		return
@@ -99,7 +99,7 @@ func (service Service) GrantsForUserID(rw http.ResponseWriter, req *http.Request
 	token := authHeader
 
 	//	Send the request to the datamanager and get grant information for the given credentials:
-	response, err := service.DB.GetGrantsForToken(token)
+	response, err := service.DB.GetScopesForToken(token)
 	if err != nil {
 		sendErrorResponse(rw, err, http.StatusUnauthorized)
 		return

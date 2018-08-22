@@ -7,7 +7,7 @@ import (
 	"github.com/danesparza/authserver/data"
 )
 
-func TestGrants_GetGrantUserWithCredentials_ValidCredentials_Successful(t *testing.T) {
+func TestScopes_GetUserScopesWithCredentials_ValidCredentials_Successful(t *testing.T) {
 	//	Arrange
 	systemdbfilename, tokendbfilename := getTestFiles()
 	defer os.Remove(systemdbfilename)
@@ -23,7 +23,7 @@ func TestGrants_GetGrantUserWithCredentials_ValidCredentials_Successful(t *testi
 	response, secret, err := db.AuthSystemBootstrap()
 
 	//	Act
-	grantinfo, gerr := db.GetUserGrantsWithCredentials(response.Name, secret)
+	scopeinfo, gerr := db.GetUserScopesWithCredentials(response.Name, secret)
 
 	//	Assert
 	if err != nil {
@@ -31,7 +31,7 @@ func TestGrants_GetGrantUserWithCredentials_ValidCredentials_Successful(t *testi
 	}
 
 	if gerr != nil {
-		t.Errorf("GetUserGrantsWithCredentials: Should get grants without error: %s", err)
+		t.Errorf("GetUserScopesWithCredentials: Should get scopes without error: %s", err)
 	}
 
 	if response.ID != "bdldpjad2pm0cd64ra80" || response.Name != "admin" {
@@ -42,15 +42,15 @@ func TestGrants_GetGrantUserWithCredentials_ValidCredentials_Successful(t *testi
 		t.Errorf("Init failed: Should return admin user secret: %s", secret)
 	}
 
-	if len(grantinfo.GrantResources) != 1 {
-		t.Errorf("GetUserGrantsWithCredentials failed: Should return all grants, but got: %v", len(grantinfo.GrantResources))
+	if len(scopeinfo.ScopeResources) != 1 {
+		t.Errorf("GetUserScopesWithCredentials failed: Should return all scopes, but got: %v", len(scopeinfo.ScopeResources))
 	}
 
 	//	Spit out what we found (for debugging):
-	//	t.Logf("Grants found: %+v", grantinfo)
+	//	t.Logf("Scopes found: %+v", scopeinfo)
 }
 
-func TestGrants_GetGrantUserWithCredentials_WrongCredentials_ReturnsError(t *testing.T) {
+func TestScopes_GetUserScopesWithCredentials_WrongCredentials_ReturnsError(t *testing.T) {
 	//	Arrange
 	systemdbfilename, tokendbfilename := getTestFiles()
 	defer os.Remove(systemdbfilename)
@@ -66,7 +66,7 @@ func TestGrants_GetGrantUserWithCredentials_WrongCredentials_ReturnsError(t *tes
 	response, _, err := db.AuthSystemBootstrap()
 
 	//	Act
-	grantinfo, gerr := db.GetUserGrantsWithCredentials(response.Name, "INTENTIONALLY_WRONG_AND_VERY_INCORRECT_PASSWORD")
+	scopeinfo, gerr := db.GetUserScopesWithCredentials(response.Name, "INTENTIONALLY_WRONG_AND_VERY_INCORRECT_PASSWORD")
 
 	//	Assert
 	if err != nil {
@@ -74,13 +74,13 @@ func TestGrants_GetGrantUserWithCredentials_WrongCredentials_ReturnsError(t *tes
 	}
 
 	if gerr == nil {
-		t.Errorf("GetUserGrantsWithCredentials: Should return error, but didn't")
+		t.Errorf("GetUserScopesWithCredentials: Should return error, but didn't")
 	}
 
-	if len(grantinfo.GrantResources) != 0 {
-		t.Errorf("GetUserGrantsWithCredentials failed: Should not retury any grant information, but got: %v", len(grantinfo.GrantResources))
+	if len(scopeinfo.ScopeResources) != 0 {
+		t.Errorf("GetUserScopesWithCredentials failed: Should not retury any scope information, but got: %v", len(scopeinfo.ScopeResources))
 	}
 
 	//	Spit out what we found (for debugging):
-	//	t.Logf("Grants found: %+v", grantinfo)
+	//	t.Logf("Scopes found: %+v", scopeinfo)
 }

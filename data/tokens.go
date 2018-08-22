@@ -97,11 +97,11 @@ func (store DBManager) getTokenInfo(tokenID string) (Token, error) {
 	return retval, nil
 }
 
-// GetGrantsForToken gets Grant information for a given token
-func (store DBManager) GetGrantsForToken(tokenID string) (GrantUser, error) {
+// GetScopesForToken gets scope information for a given token
+func (store DBManager) GetScopesForToken(tokenID string) (ScopeUser, error) {
 
 	//	Create our default return value
-	retval := GrantUser{}
+	retval := ScopeUser{}
 
 	//	First, get the userid for the given token
 	tokenInfo, err := store.getTokenInfo(tokenID)
@@ -117,15 +117,15 @@ func (store DBManager) GetGrantsForToken(tokenID string) (GrantUser, error) {
 		return retval, fmt.Errorf("There was a problem getting user information for the token: %s", err)
 	}
 
-	//	Next, get the grant information for the given userid
-	grantInfo, err := store.getUserGrants(userInfo)
+	//	Next, get the scope information for the given userid
+	scopeInfo, err := store.getUserScopes(userInfo)
 
 	if err != nil {
-		return retval, fmt.Errorf("There was a problem getting grant information for the token: %s", err)
+		return retval, fmt.Errorf("There was a problem getting scope information for the token: %s", err)
 	}
 
-	retval = grantInfo
+	retval = scopeInfo
 
-	//	Return the grant information
+	//	Return the scope information
 	return retval, nil
 }
