@@ -13,7 +13,7 @@ Why reimplement an OAuth authorization serice in your app if you don't have to?
 
 ## Interacting with the service
 
-* First get a token for the admin user:
+First get a token for the admin user:
 ```
 curl -X POST \
   https://localhost:3001/token/client \
@@ -26,3 +26,9 @@ curl -X POST \
 	"scope": "*"
 }'
 ```
+
+Next, create a new resource and a role:
+
+Then create users and associate them to the new resource and role:
+
+Finally, verify the user has been assigned to the new resource and role.
