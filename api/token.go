@@ -41,7 +41,8 @@ func HelloWorld(rw http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(rw, "Hello, world - service")
 }
 
-// ClientCredentialsGrant implements the OAuth 2 'Client Credentials' grant
+// ClientCredentialsGrant implements the OAuth 2 'Client Credentials' grant --
+// see https://alexbilbie.com/guide-to-oauth-2-grants/ for more information
 func (service Service) ClientCredentialsGrant(rw http.ResponseWriter, req *http.Request) {
 	//	req.Body is a ReadCloser -- we need to remember to close it:
 	defer req.Body.Close()
