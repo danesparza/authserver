@@ -11,4 +11,19 @@ Why reimplement an OAuth authorization serice in your app if you don't have to?
 * Bootstrap the system using `authserver bootstrap`.  This will create the admin password for your system and display it.  Please make a note of it -- you'll only see it once.
 * Start the service and admin UI using `authserver start`
 
+## Interacting with the service
 
+* First get a token for the admin user:
+```
+curl -X POST \
+  https://localhost:3001/token/client \
+  -H 'Authorization: Bearer testing' \
+  -H 'Cache-Control: no-cache' \
+  -H 'Content-Type: application/json'
+  -d '{
+	"grant_type": "client_credentials",
+	"client_id": "admin",
+	"client_secret": "your_admin_password",
+	"scope": "*"
+}'
+```
