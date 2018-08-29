@@ -13,7 +13,7 @@ import (
 
 var (
 	cfgFile               string
-	ProblemWithConfigFile bool
+	problemWithConfigFile bool
 	loglevel              string
 )
 
@@ -79,7 +79,7 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err != nil {
-		ProblemWithConfigFile = true
+		problemWithConfigFile = true
 	}
 
 	//	Set the log level from config (if we have it)

@@ -12,6 +12,10 @@ import (
 	"github.com/rs/cors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/swaggo/http-swagger"
+
+	// Used by the 'swagger' api doc generation tool
+	_ "github.com/danesparza/authserver/docs"
 )
 
 // startCmd represents the start command
@@ -34,16 +38,19 @@ func start(cmd *cobra.Command, args []string) {
 	apiService := api.Service{DB: db}
 
 	//	Create a router and setup our REST endpoints...
-	UIRouter := mux.NewRouter()
-	ServiceRouter := mux.NewRouter()
+	SystemRouter := mux.NewRouter()
+	TokenRouter := mux.NewRouter()
+
+	//	Setup the swagger doc routes:
+	TokenRouter.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+	SystemRouter.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	//	Setup our UI routes
-	UIRouter.HandleFunc("/", api.ShowUI)
+	SystemRouter.HandleFunc("/", api.ShowUI)
 
 	//	Setup our Service routes
-	ServiceRouter.HandleFunc("/", api.HelloWorld)
-	ServiceRouter.HandleFunc("/token/client", apiService.ClientCredentialsGrant).Methods("POST")
-	ServiceRouter.HandleFunc("/user", apiService.ScopesForUserID).Methods("GET")
+	TokenRouter.HandleFunc("/token/client", apiService.ClientCredentialsGrant).Methods("POST")
+	TokenRouter.HandleFunc("/user", apiService.ScopesForUserID).Methods("GET")
 
 	//	Setup the CORS options:
 	log.Printf("[INFO] Allowed CORS origins: %s\n", viper.GetString("apiservice.allowed-origins"))
@@ -51,7 +58,7 @@ func start(cmd *cobra.Command, args []string) {
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   strings.Split(viper.GetString("apiservice.allowed-origins"), ","),
 		AllowCredentials: true,
-	}).Handler(ServiceRouter)
+	}).Handler(TokenRouter)
 
 	//	Format the bound interface:
 	formattedAPIInterface := viper.GetString("apiservice.bind")
@@ -81,7 +88,7 @@ func start(cmd *cobra.Command, args []string) {
 	go func() {
 		defer wg.Done()
 		log.Printf("[INFO] Starting UI service: https://%s:%s\n", formattedUIInterface, viper.GetString("uiservice.port"))
-		log.Printf("[ERROR] %v\n", http.ListenAndServeTLS(viper.GetString("uiservice.bind")+":"+viper.GetString("uiservice.port"), viper.GetString("uiservice.tlscert"), viper.GetString("uiservice.tlskey"), UIRouter))
+		log.Printf("[ERROR] %v\n", http.ListenAndServeTLS(viper.GetString("uiservice.bind")+":"+viper.GetString("uiservice.port"), viper.GetString("uiservice.tlscert"), viper.GetString("uiservice.tlskey"), SystemRouter))
 	}()
 
 	//	Wait for everything to stop...
