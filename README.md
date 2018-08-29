@@ -17,7 +17,6 @@ Why reimplement an OAuth authorization serice in your app if you don't have to?
 ```
 curl -X POST \
   https://localhost:3001/token/client \
-  -H 'Authorization: Bearer testing' \
   -H 'Cache-Control: no-cache' \
   -H 'Content-Type: application/json'
   -d '{
