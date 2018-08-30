@@ -98,9 +98,9 @@ func (service Service) ClientCredentialsGrant(rw http.ResponseWriter, req *http.
 	json.NewEncoder(rw).Encode(response)
 }
 
-// ScopesForUserID gets the scope information for the userID passed in the url
+// ScopesForToken gets the scope information for the bearer token passed in the header
 // @Summary gets the scope information
-// @Description gets the scope information for the userID passed in the url
+// @Description gets the scope information for the bearer token passed in the header
 // @ID scopes-for-user-id
 // @Accept  json
 // @Produce  json
@@ -108,7 +108,7 @@ func (service Service) ClientCredentialsGrant(rw http.ResponseWriter, req *http.
 // @Success 200 {object} api.AuthResponse
 // @Failure 401 {object} api.ErrorResponse
 // @Router /oauth/authorize [get]
-func (service Service) ScopesForUserID(rw http.ResponseWriter, req *http.Request) {
+func (service Service) ScopesForToken(rw http.ResponseWriter, req *http.Request) {
 	//	req.Body is a ReadCloser -- we need to remember to close it:
 	defer req.Body.Close()
 

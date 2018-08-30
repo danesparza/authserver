@@ -69,7 +69,7 @@ func start(cmd *cobra.Command, args []string) {
 
 	//	Setup our Service routes
 	OAuthRouter.HandleFunc("/oauth/token/client", apiService.ClientCredentialsGrant).Methods("POST")
-	OAuthRouter.HandleFunc("/oauth/authorize", apiService.ScopesForUserID).Methods("GET")
+	OAuthRouter.HandleFunc("/oauth/authorize", apiService.ScopesForToken).Methods("GET")
 
 	//	Setup the CORS options:
 	log.Printf("[INFO] Allowed CORS origins: %s\n", viper.GetString("apiservice.allowed-origins"))
