@@ -43,3 +43,32 @@ func TestGetTokenFromAuthHeader_ValidBearerToken_ReturnsToken(t *testing.T) {
 		t.Errorf("getTokenFromAuthHeader should have decoded to %s but got %s instead", decodedToken, retval)
 	}
 }
+
+func TestBasicHeaderValid_ValidBasicAuth_ReturnsTrue(t *testing.T) {
+	//	Arrange
+	authHeader := "Basic SOMEENCODEDCREDENTIALS"
+
+	//	Act
+	retval := basicHeaderValid(authHeader)
+
+	//	Assert
+	if retval == false {
+		t.Errorf("basicHeaderValid indicates basic auth is invalid, but should be valid")
+	}
+}
+
+func TestGetCredentialsFromAuthHeader_ValidBasicAuth_ReturnsCredentials(t *testing.T) {
+	//	Arrange
+	authHeader := "Basic dGVzdHVzZXI6dGVzdHBhc3N3b3Jk"
+
+	expecteduser := "testuser"
+	expectedpassword := "testpassword"
+
+	//	Act
+	retuser, retpassword := getCredentialsFromAuthHeader(authHeader)
+
+	//	Assert
+	if retuser != expecteduser || retpassword != expectedpassword {
+		t.Errorf("getCredentialsFromAuthHeader expected %s / %s but got %s / %s instead", expecteduser, expectedpassword, retuser, retpassword)
+	}
+}

@@ -47,16 +47,32 @@ func (service Service) ClientCredentialsGrant(rw http.ResponseWriter, req *http.
 	//	req.Body is a ReadCloser -- we need to remember to close it:
 	defer req.Body.Close()
 
-	//	Decode the request if it was a POST:
-	request := AuthRequest{}
-	err := json.NewDecoder(req.Body).Decode(&request)
+	//	Get the authorization header:
+	authHeader := req.Header.Get("Authorization")
+
+	//	If the basic auth header wasn't supplied, return an error
+	if basicHeaderValid(authHeader) != true {
+		sendErrorResponse(rw, fmt.Errorf("HTTP basic auth credentials not supplied"), http.StatusUnauthorized)
+		return
+	}
+
+	//	Get just the credentials from basic auth information:
+	clientid, clientsecret := getCredentialsFromAuthHeader(authHeader)
+
+	//	Decode the request using ParseForm:
+	err := req.ParseForm()
 	if err != nil {
 		sendErrorResponse(rw, err, http.StatusBadRequest)
 		return
 	}
 
+	/*
+		log.Println("Parsed grant type: ", req.PostForm["grant_type"])
+		log.Println("Parsed scopes: ", req.PostForm["scope"])
+	*/
+
 	//	Send the request to the datamanager and get grant information for the given credentials:
-	scopeUser, err := service.DB.GetUserScopesWithCredentials(request.ClientID, request.ClientSecret)
+	scopeUser, err := service.DB.GetUserScopesWithCredentials(clientid, clientsecret)
 	if err != nil {
 		sendErrorResponse(rw, err, http.StatusUnauthorized)
 		return
@@ -83,7 +99,15 @@ func (service Service) ClientCredentialsGrant(rw http.ResponseWriter, req *http.
 }
 
 // ScopesForUserID gets the scope information for the userID passed in the url
-// REQUIRES: valid bearer token
+// @Summary gets the scope information
+// @Description gets the scope information for the userID passed in the url
+// @ID scopes-for-user-id
+// @Accept  json
+// @Produce  json
+// @Security OAuth2Application
+// @Success 200 {object} api.AuthResponse
+// @Failure 401 {object} api.ErrorResponse
+// @Router /oauth/authorize [get]
 func (service Service) ScopesForUserID(rw http.ResponseWriter, req *http.Request) {
 	//	req.Body is a ReadCloser -- we need to remember to close it:
 	defer req.Body.Close()
@@ -131,6 +155,25 @@ func authHeaderValid(header string) bool {
 	return retval
 }
 
+// basicHeaderValid returns true if the passed header value is a valid
+// for a "http basic authentication" authorization field -- otherwise return false
+func basicHeaderValid(header string) bool {
+	retval := true
+
+	//	If we don't have at least x number characters,
+	//	it must not include the prefix text 'Basic '
+	if len(header) < len("Basic ") {
+		return false
+	}
+
+	//	If the first part of the string isn't 'Basic ' then it's not a basic auth header...
+	if strings.EqualFold(header[:len("Basic ")], "Basic ") != true {
+		return false
+	}
+
+	return retval
+}
+
 // getTokenFromAuthHeader returns the token itself from the Authorization header
 func getTokenFromAuthHeader(header string) string {
 	retval := ""
@@ -157,4 +200,36 @@ func getTokenFromAuthHeader(header string) string {
 	retval = string(tokenBytes)
 
 	return retval
+}
+
+// getCredentialsFromAuthHeader returns the username/password from the Authorization header
+func getCredentialsFromAuthHeader(header string) (string, string) {
+	username := ""
+	password := ""
+
+	//	If we don't have at least x number characters,
+	//	it must not include the prefix text 'Basic '
+	if len(header) < len("Basic ") {
+		return "", ""
+	}
+
+	//	If the first part of the string isn't 'Basic ' then it's not a basic auth string...
+	if strings.EqualFold(header[:len("Basic ")], "Basic ") != true {
+		return "", ""
+	}
+
+	//	Get the credentials and decode them
+	encodedCredentials := header[len("Basic "):]
+	credentialBytes, err := base64.StdEncoding.DecodeString(encodedCredentials)
+	if err != nil {
+		return "", ""
+	}
+
+	//	Change the type to string
+	credentials := strings.Split(string(credentialBytes), ":")
+
+	username = credentials[0]
+	password = credentials[1]
+
+	return username, password
 }

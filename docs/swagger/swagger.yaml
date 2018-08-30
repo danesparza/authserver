@@ -1,16 +1,65 @@
-basePath: /v2
-host: petstore.swagger.io
+basePath: /
+definitions:
+  api.AuthResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: string
+      refresh_token:
+        type: string
+      token_type:
+        type: string
+    type: object
+  api.ErrorResponse:
+    properties:
+      message:
+        type: string
+      status:
+        type: integer
+    type: object
+host: localhost:3001
 info:
   contact:
-    email: support@swagger.io
     name: API Support
-    url: http://www.swagger.io/support
-  description: This is a sample server Petstore server.
+    url: https://github.com/danesparza/authserver
+  description: OAuth 2 based token issue and validation server, with built in management
+    UI
   license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
-  termsOfService: http://swagger.io/terms/
-  title: Swagger Example API
+    name: MIT License
+    url: https://github.com/danesparza/authserver/blob/master/LICENSE
+  termsOfService: https://github.com/danesparza/authserver
+  title: Authserver API
   version: "1.0"
-paths: {}
+paths:
+  /oauth/authorize:
+    get:
+      consumes:
+      - application/json
+      description: gets the scope information for the userID passed in the url
+      operationId: scopes-for-user-id
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.AuthResponse'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+            type: object
+      security:
+      - OAuth2Application: []
+      summary: gets the scope information
+securityDefinitions:
+  OAuth2Application:
+    flow: application
+    scopes:
+      sys_admin: ' Grants read and write access to administrative information'
+      sys_delegate: ' Grants write access for a specific resource'
+    tokenUrl: https://localhost:3001/oauth/token/client
+    type: oauth2
 swagger: "2.0"

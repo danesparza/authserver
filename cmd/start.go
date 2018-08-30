@@ -26,6 +26,25 @@ var startCmd = &cobra.Command{
 	Run:   start,
 }
 
+// @title Authserver API
+// @version 1.0
+// @description OAuth 2 based token issue and validation server, with built in management UI
+// @termsOfService https://github.com/danesparza/authserver
+
+// @contact.name API Support
+// @contact.url https://github.com/danesparza/authserver
+
+// @license.name MIT License
+// @license.url https://github.com/danesparza/authserver/blob/master/LICENSE
+
+// @host localhost:3001
+// @BasePath /
+
+// @securitydefinitions.oauth2.application OAuth2Application
+// @tokenUrl https://localhost:3001/oauth/token/client
+// @scope.sys_delegate Grants write access for a specific resource
+// @scope.sys_admin Grants read and write access to administrative information
+
 func start(cmd *cobra.Command, args []string) {
 
 	//	Create a DBManager object and associate with the api.Service
@@ -39,18 +58,18 @@ func start(cmd *cobra.Command, args []string) {
 
 	//	Create a router and setup our REST endpoints...
 	SystemRouter := mux.NewRouter()
-	TokenRouter := mux.NewRouter()
+	OAuthRouter := mux.NewRouter()
 
 	//	Setup the swagger doc routes:
-	TokenRouter.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+	OAuthRouter.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 	SystemRouter.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	//	Setup our UI routes
 	SystemRouter.HandleFunc("/", api.ShowUI)
 
 	//	Setup our Service routes
-	TokenRouter.HandleFunc("/token/client", apiService.ClientCredentialsGrant).Methods("POST")
-	TokenRouter.HandleFunc("/user", apiService.ScopesForUserID).Methods("GET")
+	OAuthRouter.HandleFunc("/oauth/token/client", apiService.ClientCredentialsGrant).Methods("POST")
+	OAuthRouter.HandleFunc("/oauth/authorize", apiService.ScopesForUserID).Methods("GET")
 
 	//	Setup the CORS options:
 	log.Printf("[INFO] Allowed CORS origins: %s\n", viper.GetString("apiservice.allowed-origins"))
@@ -58,7 +77,7 @@ func start(cmd *cobra.Command, args []string) {
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   strings.Split(viper.GetString("apiservice.allowed-origins"), ","),
 		AllowCredentials: true,
-	}).Handler(TokenRouter)
+	}).Handler(OAuthRouter)
 
 	//	Format the bound interface:
 	formattedAPIInterface := viper.GetString("apiservice.bind")
